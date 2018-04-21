@@ -3,5 +3,18 @@
 ops=$1
 
 # Call relevant function.
-if test $ops -e
-echo $ops
+if test $ops = dims
+then
+  echo dims
+elif test $ops = transpose
+then
+  echo transpose
+elif test $ops = mean
+then
+  echo mean
+elif test $ops = add
+then
+  echo add
+else
+  echo multiply
+fi

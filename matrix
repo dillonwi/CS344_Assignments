@@ -1,0 +1,7 @@
+#!/bin/bash
+# Get operation from terminal.
+ops=$1
+
+# Call relevant function.
+if test $ops -e
+echo $ops

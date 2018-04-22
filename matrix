@@ -1,12 +1,125 @@
 #!/bin/bash
+
+# Function Definitions
+
+# Prints the dimensions of the given matrix to stdout.
+# If a matrix file is passed as an argument, that matrix is used.
+# Otherwise, stdin is used.
+getDims() {
+  rows=0
+  cols=0
+  while IFS="$(printf '\t')" read line
+  do
+    rows=$(expr $rows + 1)
+
+    # Count columns only on first iteration.
+    if test $cols -eq 0
+    then
+      for cell in $line
+      do
+        cols=$(expr $cols + 1)
+      done
+    fi
+
+  done < "${1:-/dev/stdin}"
+  echo $rows $cols
+  exit 0
+}
+
+# Adds two matrices and prints the result to stdout.
+add() {
+
+  d1=$(getDims $1)
+  d2=$(getDims $2)
+  tab=" "
+
+  if test "$d1" = "$d2"
+  then
+    # Add matrices
+    paste -d , $1 $2 | while IFS="$(printf ',')" read -r m1 m2
+    do
+      line="" # Initialize empty string for new matrix row.
+      loc=0
+      arr1=($m1)
+      arr2=($m2)
+
+      # Iterate over each number in $arr1 and add it to $arr2.
+      # Then, append that number (with a tab) to the end of the current line.
+      for num1 in $m1
+      do
+        num=$(expr ${arr1[loc]} + ${arr2[loc]})
+        line="$line$num\\t"
+        loc=$(expr $loc + 1)
+      done
+      line=${line::-2}
+      echo -e $line
+    done
+  else
+    >&2 echo "error: Matrix dimensions are not equal."
+    exit 1
+  fi
+}
+
+#
+# Preliminary Error Checking
+#
+
+# Check for more than 3 arguments (too many).
+if test $# -gt 3
+then
+  >&2 echo "error: $# greater than 3"
+  exit 2
+
+# Check for less than 1 argument (no operation).
+elif test $# -lt 1
+then
+  >&2 echo "error: $# less than 1"
+  exit 3
+elif test $# -gt 1
+then
+  # Check that files exist.
+  if [ ! -f $2 ]
+  then
+    >&2 echo "error: First file doesn't exist."
+    exit 5
+  fi
+elif test $# -gt 2
+then
+  if [ ! -f $3 ]
+  then
+    >&2 echo "error: Second file doesn't exist."
+    exit 6
+  fi
+fi
+
+#
+# Operations that require less than 2 matrices.
+#
+
+
 # Get operation from terminal.
 ops=$1
 
-# Call relevant function.
+# Call relevant function for operation given.
 if test $ops = dims
 then
-  echo dims
-elif test $ops = transpose
+  getDims $2
+fi
+
+#
+# Operations that require 2 matrices.
+#
+
+# Error check for operations with 2 matrices.
+# Check for 3 arguments: operation matrix1 matrix.
+if test $# -ne 3
+then
+  >&2 echo "error: $# not equal to 3"
+  exit 4
+fi
+
+# More Operators.
+if test $ops = transpose
 then
   echo transpose
 elif test $ops = mean
@@ -14,7 +127,9 @@ then
   echo mean
 elif test $ops = add
 then
-  echo add
+  add $2 $3
 else
   echo multiply
 fi
+
+exit 0

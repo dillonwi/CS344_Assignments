@@ -64,11 +64,6 @@ add() {
 
 transpose() {
 
-  # Get dimensions of array
-  dims=$(getDims $1)
-  rows=$( echo $dims | awk '{print $1}' )
-  cols=$( echo $dims | awk '{print $2}' )
-
   # Empty array variable.
   declare -A arr
 
@@ -84,7 +79,10 @@ transpose() {
     done
     r=$(expr $r + 1)
   done < "${1:-/dev/stdin}"
+  rows=$r
+  cols=$c
 
+  # Echo transposed array.
   for c in $( seq 0 $( expr $cols - 1 ) )
   do
     line=

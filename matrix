@@ -6,6 +6,7 @@
 # If a matrix file is passed as an argument, that matrix is used.
 # Otherwise, stdin is used.
 getDims() {
+
   rows=0
   cols=0
   while IFS="$(printf '\t')" read line
@@ -58,6 +59,44 @@ add() {
     >&2 echo "error: Matrix dimensions are not equal."
     exit 1
   fi
+  exit 0
+}
+
+transpose() {
+
+  # Get dimensions of array
+  dims=$(getDims $1)
+  rows=$( echo $dims | awk '{print $1}' )
+  cols=$( echo $dims | awk '{print $2}' )
+
+  # Empty array variable.
+  declare -A arr
+
+  # Populate 2D array with input.
+  r=0
+  while IFS="$(printf '\t')" read line
+  do
+    c=0
+    for cell in $line
+    do
+      arr[$c, $r]=$cell
+      c=$(expr $c + 1)
+    done
+    r=$(expr $r + 1)
+  done < "${1:-/dev/stdin}"
+
+  for c in $( seq 0 $( expr $cols - 1 ) )
+  do
+    line=
+    for r in $( seq 0 $( expr $rows ) )
+    do
+      num=${arr[$c, $r]}
+      line="$line$num\\t"
+    done
+    line=${line::-4}
+    echo -e $line
+  done
+  exit 0
 }
 
 #
@@ -75,13 +114,18 @@ elif test $# -lt 1
 then
   >&2 echo "error: $# less than 1"
   exit 3
-elif test $# -gt 1
+fi
+if test $# -gt 1
 then
   # Check that files exist.
   if [ ! -f $2 ]
   then
     >&2 echo "error: First file doesn't exist."
     exit 5
+  elif ! [ -r $2 ]
+  then
+    error "error: Please allow read file permissions for $2";
+    exit 8
   fi
 elif test $# -gt 2
 then
@@ -89,6 +133,10 @@ then
   then
     >&2 echo "error: Second file doesn't exist."
     exit 6
+  elif ! [ -r $2 ]
+  then
+    error "error: Please allow read file permissions for $3";
+    exit 8
   fi
 fi
 
@@ -103,8 +151,24 @@ ops=$1
 # Call relevant function for operation given.
 if test $ops = dims
 then
+  # Dims can only work with 1 file at a time.
+  if test $# -gt 2
+  then
+    >&2 echo "error: Too many matrices for dims."
+    exit 7
+  fi
   getDims $2
+elif test $ops = transpose
+then
+  # Transpose can only work with 1 file at a time.
+  if test $# -gt 2
+  then
+    >&2 echo "error: Too many matrices for transpose."
+    exit 7
+  fi
+  transpose $2
 fi
+
 
 #
 # Operations that require 2 matrices.
@@ -119,10 +183,7 @@ then
 fi
 
 # More Operators.
-if test $ops = transpose
-then
-  echo transpose
-elif test $ops = mean
+if test $ops = mean
 then
   echo mean
 elif test $ops = add

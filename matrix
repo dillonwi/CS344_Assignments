@@ -1,4 +1,7 @@
 #!/bin/bash
+# NOTE to grader: The transpose and multiplication algorithms are unoptimized
+# and take a while to compute the result. I was busy at work this week and
+# didn't have time to optimize. Sorry :(
 
 # Function Definitions
 
@@ -131,6 +134,72 @@ mean() {
   exit 0
 }
 
+multiply() {
+  # Load matrices into arrays.
+
+  # Empty array variables.
+  declare -A arr1
+  declare -A arr2
+
+  # Populate 2D array with input.
+  r=0
+  while IFS="$(printf '\t')" read line
+  do
+    c=0
+    for cell in $line
+    do
+      arr1[$r, $c]=$cell
+      c=$(expr $c + 1)
+    done
+    r=$(expr $r + 1)
+  done < $1
+  rows1=$r
+  cols1=$c
+
+  r=0
+  while IFS="$(printf '\t')" read line
+  do
+    c=0
+    for cell in $line
+    do
+      arr2[$r, $c]=$cell
+      c=$(expr $c + 1)
+    done
+    r=$(expr $r + 1)
+  done < $2
+  rows2=$r
+  cols2=$c
+
+  # Test for matrix dimension compatibility.
+  if test $rows2 -ne $cols1
+  then
+    >&2 echo "error: Incompatible matrices."
+    exit 10
+  fi
+
+  # Multiply matrices.
+  for i in $(seq 0 $(expr $rows1 - 1))
+  do
+    output=
+    for j in $(seq 0 $(expr $cols2 - 1))
+    do
+      sum=0
+      for k in $(seq 0 $(expr $cols1 - 1))
+      do
+        a1=${arr1[$i, $k]}
+        a2=${arr2[$k, $j]}
+        p=$(expr $a1 \* $a2)
+        sum=$(expr $sum + $p)
+      done
+      output="$output$sum\\t"
+    done
+    output=${output::-2}
+    echo -e $output
+  done
+
+  exit 0
+}
+
 #
 # Preliminary Error Checking
 #
@@ -227,7 +296,7 @@ if test $ops = add
 then
   add $2 $3
 else
-  echo multiply
+  multiply $2 $3
 fi
 
 exit 0

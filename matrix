@@ -97,6 +97,40 @@ transpose() {
   exit 0
 }
 
+mean() {
+  # Iterate over the array, adding up the sums for each column.
+  r=0
+  output=
+  while IFS="$(printf '\t')" read line
+  do
+    c=1
+    sumArr=
+    for cell in $line
+    do
+      sumArr[$c]=$(expr ${sumArr[$c]} + $cell)
+      c=$(expr $c + 1)
+    done
+    r=$(expr $r + 1)
+  done < "${1:-/dev/stdin}"
+
+  # Calculate and echo the means.
+  for i in $(seq 1 $(expr $c - 1))
+  do
+    # Round to nearest integer. -1.5 -> -2, 1.5 -> 2, etc.
+    #(a + (b/2)*( (a>0)*2-1 )) / b
+    sum=0
+    if test ${sumArr[$i]} -gt 0
+    then
+      sum=1
+    fi
+    sum=$(expr $(expr $(expr $(expr $(expr $sum \* 2) - 1) \* $(expr $r / 2)) + ${sumArr[$i]}) / $r)
+    output="$output$sum\\t"
+  done
+  output=${output::-2}
+  echo -e $output
+  exit 0
+}
+
 #
 # Preliminary Error Checking
 #
@@ -162,9 +196,17 @@ then
   if test $# -gt 2
   then
     >&2 echo "error: Too many matrices for transpose."
-    exit 7
+    exit 8
   fi
   transpose $2
+elif test $ops = mean
+then
+  if test $# -gt 2
+  then
+    >&2 echo "error: Too many matrices for mean."
+    exit 9
+  fi
+  mean $2
 fi
 
 
@@ -181,10 +223,7 @@ then
 fi
 
 # More Operators.
-if test $ops = mean
-then
-  echo mean
-elif test $ops = add
+if test $ops = add
 then
   add $2 $3
 else

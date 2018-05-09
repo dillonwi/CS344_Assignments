@@ -148,7 +148,7 @@ Room* generateRooms() {
     /* Create a room at the selected location */
     roomArr[current.x][current.y][current.z] = index;
     Room* r = (Room) malloc(sizeof(Room));
-    r.name = randomName();
+    r->name = randomName();
 
     /* Nullify all outgoing connections */
     int i;

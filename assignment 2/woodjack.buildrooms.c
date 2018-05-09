@@ -1,9 +1,8 @@
-(Room)/*
+/*
  * CS 344 Assignment 2 - Adventure Game
  * By Jack Woods - May 8th, 2018
  * woodjack@oregonstate.edu
  */
-
 
 #include <stdlib.h>
 #include <stdio.h>

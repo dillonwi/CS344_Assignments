@@ -66,31 +66,48 @@ char* randomName() {
   }
 }
 
-void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
-  Room* o = &rooms[otherLoc];
+int createConnection(Room* r, int index, int otherLoc) {
 
-  /* Connect o to r */
-  int emptyLoc = 0;
-  int foundEmpty = 0;
-  while (!foundEmpty) {
-    if (o->outgoing[emptyLoc] == -1) {
-      foundEmpty = 1;
-      printf("Adding %d to %d.\n", index, otherLoc);
-      o->outgoing[emptyLoc] = index;
+  /* Ensure that a connection doesn't already exist */
+  int found = 0;
+  int i = 0;
+  while (!found && i < 6) {
+    if (r->outgoing[i] == otherLoc) {
+      found = 1;
     }
-    emptyLoc++;
+    i++;
   }
 
-  /* Connect r to o */
-  emptyLoc = 0;
-  foundEmpty = 0;
-  while (!foundEmpty) {
-    if (r->outgoing[emptyLoc] == -1) {
-      foundEmpty = 1;
-      printf("Adding %d to %d.\n", otherLoc, index);
-      r->outgoing[emptyLoc] = otherLoc;
+  if (!found) {
+    Room* o = rooms[otherLoc];
+
+    /* Connect o to r */
+    int emptyLoc = 0;
+    int foundEmpty = 0;
+    while (!foundEmpty && emptyLoc < 6) {
+      if (o->outgoing[emptyLoc] == -1) {
+        foundEmpty = 1;
+        printf("Adding %d to %d.\n", index, otherLoc);
+        o->outgoing[emptyLoc] = index;
+      }
+      emptyLoc++;
     }
-    emptyLoc++;
+    if (foundEmpty == 0) return 0;
+
+    /* Connect r to o */
+    emptyLoc = 0;
+    foundEmpty = 0;
+    while (!foundEmpty && emptyLoc < 6) {
+      if (r->outgoing[emptyLoc] == -1) {
+        foundEmpty = 1;
+        printf("Adding %d to %d.\n", otherLoc, index);
+        r->outgoing[emptyLoc] = otherLoc;
+      }
+      emptyLoc++;
+    }
+    if (foundEmpty == 0) return 0;
+
+    return 1;
   }
 }
 
@@ -107,11 +124,52 @@ void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
  * 3. Assign the room a random name.
  * 4. If this is the first room being created, assign "START_ROOM" as the room
  *    type. If it is the last, assign "END_ROOM". Else, assign "MID_ROOM".
- * 5. When the loop finishes, randomly assign 3-6 connections to each room.
+ * 5. Randomly assign 3-6 connections to each room.
  *    No duplicate connections should be allowed.
  */
 
- void generateRooms();
+ void generateRooms() {
+
+   /* 1 */
+   int i;
+   for (i = 0; i < 7; i++) {
+     /* 2 */
+     rooms[i] = (Room*) malloc(sizeof(Room));
+     /* 3 */
+     rooms[i]->name = randomName();
+     /* 4 */
+     switch(i) {
+       case 0:
+        rooms[i]->roomType = "START_ROOM";
+        break;
+      case 6:
+        rooms[i]->roomType = "END_ROOM";
+        break;
+      default:
+        rooms[i]->roomType = "MID_ROOM";
+     }
+
+
+   }
+   /* 5 */
+   for (i =0; i < 7; i++) {
+
+     int numRooms =- rand() % 4 + 3; /* Random number from 3-6 inclusive */
+     while (numRooms > 0) {
+       int random = rand() % 7; /* Random int from 0-6 inclusive */
+       if (random == i) random++;
+       if (random > 6) random = 0;
+
+       int result = createConnection(rooms[i], i, random);
+       printf("%d\n", result);
+       if (result) {
+         numRooms--;
+       }
+     }
+
+   }
+
+ }
 
 /* Saves rooms to files in a given directory. */
 void saveRooms() {
@@ -157,8 +215,6 @@ void saveRooms() {
 
 int main(int argc, char* argv[]) {
 
-  /* TODO: add at least 3 outgoing connections. */
-
   /* Initialize taken such that no names are taken. */
   int i;
   for (i = 0; i < 10; i++) {
@@ -171,7 +227,7 @@ int main(int argc, char* argv[]) {
   generateRooms();
 
   /* Save rooms to a file */
-  saveRooms();
+  //saveRooms();
 
   /* Free memory allocated to room structs. */
   for (i = 0; i < 7; i++) {

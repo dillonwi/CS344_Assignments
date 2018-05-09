@@ -95,7 +95,23 @@ void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
 }
 
 /* *** Generate Rooms *** */
+/*
+ * Before, I had a more complex algorithm that guaranteed that the floorplan
+ * of the rooms geographically made sense. Due to time constraints and a
+ * requirement that all rooms must have 3 connections, I created this simpler
+ * algorithm instead.
+ *
+ * Algorithm:
+   1. Loop from i = 0-6
+ * 2. Malloc memory for a room & insert its pointer into the array at i.
+ * 3. Assign the room a random name.
+ * 4. If this is the first room being created, assign "START_ROOM" as the room
+ *    type. If it is the last, assign "END_ROOM". Else, assign "MID_ROOM".
+ * 5. When the loop finishes, randomly assign 3-6 connections to each room.
+ *    No duplicate connections should be allowed.
+ */
 
+ void generateRooms();
 
 /* Saves rooms to files in a given directory. */
 void saveRooms() {

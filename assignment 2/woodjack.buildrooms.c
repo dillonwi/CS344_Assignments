@@ -69,6 +69,34 @@ char* randomName() {
   }
 }
 
+void createConnection(Room* r, int otherLoc) {
+  Room* o = rooms[otherLoc];
+
+  /* Connect o to r */
+  int emptyLoc = 0;
+  int foundEmpty = 0;
+  while (!foundEmpty) {
+    if (o.outgoing[emptyLoc] == NULL) {
+      foundEmpty = 1;
+    }
+    emptyLoc++;
+  }
+
+  o.outgoing[emptyLoc] = r;
+
+  /* Connect r to o */
+  emptyLoc = 0;
+  foundEmpty = 0;
+  while (!foundEmpty) {
+    if (r.outgoing[emptyLoc] == NULL) {
+      foundEmpty = 1;
+    }
+    emptyLoc++;
+  }
+
+  r.outgoing[emptyLoc] = o;
+}
+
 /* This array of room pointers is just used to free memory that's dynamically
    allocated for rooms. */
 Room* rooms[7];
@@ -99,7 +127,7 @@ Room* rooms[7];
     5f. Set current and previous location variables accordingly.
 
 */
-Room* generateRooms(int numRooms) {
+Room* generateRooms() {
   /* Create array */
   int roomArr = createRoomArray()
 
@@ -126,6 +154,12 @@ Room* generateRooms(int numRooms) {
     roomArr[current.x][current.y][current.z] = index;
     Room* r = (Room*) malloc(sizeof(Room));
     r.name = randomName();
+
+    /* Nullify all outgoing connections */
+    int i;
+    for (i = 0; i < 6; i++) {
+      r.outgoing[i] = NULL;
+    }
 
     switch(index) {
       case 0:
@@ -195,6 +229,9 @@ Room* generateRooms(int numRooms) {
       loc++;
     }
 
+    /* Save current room to array */
+    rooms[index] = r;
+
     /* Set previous location */
     prev.x = current.x;
     prev.y = current.y;
@@ -218,7 +255,7 @@ int main(int argc, char* argv[]) {
   srand(time(NULL));
 
   /* Generate Rooms */
-  Room* rooms = generateRooms(7);
+  Room* rooms = generateRooms();
 
   /* Save rooms to a file */
 

@@ -4,9 +4,14 @@
  * woodjack@oregonstate.edu
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
+#include <stdlib.h> /* malloc */
+#include <stdio.h> /* file io and sprintf */
+#include <time.h> /* rand() seed */
+#include <pthread.h> /* Practicing multithreading with file IO */
+#include <sys/stat.h> /* mkdir */
+#include <unistd.h> /* getpid() */
+#include <sys/types.h> /* getpid() */
+#include <dirent.h> /* enter directories */
 
 /*
  * I would normally put header and accompanying function definitions in a header
@@ -39,15 +44,21 @@ char* names[] = {
   "Backyard"
 };
 
+int taken[10];
+
+/* Create array of room pointers */
+Room* rooms[7];
+
 /* Selects a name from the list at random. If the name is null, it tries again.
    If the name is not null, that name is returned and the pointer in the names
    array is set to null, preventing that name from being chosen again. */
 char* randomName() {
-  while(0) {
+
+  while(1) {
     int nameLoc = rand() % 10;
-    if (names[nameLoc] != NULL) {
+    if (taken[nameLoc] != 1) {
       char* name = names[nameLoc];
-      names[nameLoc] = NULL;
+      taken[nameLoc] = 1;
       return name;
     }
   }
@@ -81,10 +92,6 @@ void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
   r->outgoing[emptyLoc] = otherLoc;
 }
 
-/* This array of room pointers is just used to free memory that's dynamically
-   allocated for rooms. */
-Room* rooms[7];
-
 /* *** Generate Rooms *** */
 /*
  * Start in the starting room, and generate rooms in a 10x10x10 3-D array. I
@@ -111,7 +118,7 @@ Room* rooms[7];
     5f. Set current and previous location variables accordingly.
 
 */
-Room* generateRooms() {
+void generateRooms() {
   /* Create array */
   int roomArr[10][10][10];
   int i;
@@ -124,10 +131,6 @@ Room* generateRooms() {
       }
     }
   }
-
-
-  /* Create array of room pointers */
-  Room* rooms[] = (Room) malloc(sizeof(Room) * 7);
 
   /* Initialize current and previous location variables */
   Location current;
@@ -146,7 +149,7 @@ Room* generateRooms() {
 
     /* Create a room at the selected location */
     roomArr[current.x][current.y][current.z] = index;
-    Room* r = (Room) malloc(sizeof(Room));
+    Room* r = (Room*) malloc(sizeof(Room));
     r->name = randomName();
 
     /* Nullify all outgoing connections */
@@ -193,7 +196,7 @@ Room* generateRooms() {
       createConnection(r, index, roomArr[current.x][current.y + 1][current.z], *rooms);
     } else {
       /* Mark location as empty */
-      locations[loc] = 010;
+      locations[loc] = 10;
       loc++;
     }
     if (roomArr[current.x][current.y - 1][current.z] > -1) {
@@ -201,7 +204,7 @@ Room* generateRooms() {
       createConnection(r, index, roomArr[current.x][current.y - 1][current.z], *rooms);
     } else {
       /* Mark location as empty */
-      locations[loc] = -010;
+      locations[loc] = -10;
       loc++;
     }
 
@@ -211,7 +214,7 @@ Room* generateRooms() {
       createConnection(r, index, roomArr[current.x][current.y][current.z + 1], *rooms);
     } else {
       /* Mark location as empty */
-      locations[loc] = 001;
+      locations[loc] = 1;
       loc++;
     }
     if (roomArr[current.x][current.y][current.z - 1] > -1) {
@@ -219,7 +222,7 @@ Room* generateRooms() {
       createConnection(r, index, roomArr[current.x][current.y][current.z - 1], *rooms);
     } else {
       /* Mark location as empty */
-      locations[loc] = -001;
+      locations[loc] = -1;
       loc++;
     }
 
@@ -232,29 +235,66 @@ Room* generateRooms() {
     prev.z = current.z;
 
     /* Choose location of next room */
-    int nextLoc = rand() % (loc + 1); /* Generates a new direction */
+    int nextLoc = rand() % (loc); /* Chooses a new direction */
     nextLoc = locations[nextLoc];
-    current.x = 5 + (nextLoc % 1000);
-    current.y = 5 + (nextLoc % 100);
+
     current.z = 5 + (nextLoc % 10);
+    nextLoc /= 10;
+    current.y = 5 + (nextLoc % 10);
+    nextLoc /= 10;
+    nextLoc = nextLoc - (nextLoc % 10);
 
   }
 
-  return NULL;
+}
+
+void saveRoom(char* dirName) {
+
+  char filename[100];
+  sprintf(filename, "%s/%s.txt", dirName, rooms[i]->name);
+  fopen(filename, )
+
+}
+
+/* Saves rooms to files in a given directory. */
+void saveRooms() {
+
+  /* Make directory */
+  char dirName[50];
+  sprintf(dirName, "woodjack.rooms.%ld", (long) getpid());
+  int result = mkdir(dirName, 0755);
+
+  /* Open rooms file for writing */
+  pthread_t threads[7];
+  int results[7;]
+  int i;
+  for (i = 0; i < 7; i++) {
+    results[i] = pthread_create(&threads[i], NULL, saveRoom, dirName);
+    assert(0 == results[i]);
+  }
+
 }
 
 int main(int argc, char* argv[]) {
 
+  /* Initialize taken such that no names are taken. */
+  int i;
+  for (i = 0; i < 10; i++) {
+    taken[i] = 0;
+  }
   /* Seed random number generator */
   srand(time(NULL));
 
   /* Generate Rooms */
-  Room* rooms = generateRooms();
+  generateRooms();
 
   /* Save rooms to a file */
-
+  saveRooms();
 
   /* Free memory allocated to room structs. */
+  for (i = 0; i < 7; i++) {
+    free(rooms[i]);
+  }
 
   return 0;
 }

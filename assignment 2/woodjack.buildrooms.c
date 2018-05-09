@@ -75,11 +75,11 @@ void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
   while (!foundEmpty) {
     if (o->outgoing[emptyLoc] == -1) {
       foundEmpty = 1;
+      printf("Adding %d to %d.\n", index, otherLoc);
+      o->outgoing[emptyLoc] = index;
     }
     emptyLoc++;
   }
-
-  o->outgoing[emptyLoc] = index;
 
   /* Connect r to o */
   emptyLoc = 0;
@@ -87,11 +87,11 @@ void createConnection(Room* r, int index, int otherLoc, Room* rooms) {
   while (!foundEmpty) {
     if (r->outgoing[emptyLoc] == -1) {
       foundEmpty = 1;
+      printf("Adding %d to %d.\n", otherLoc, index);
+      r->outgoing[emptyLoc] = otherLoc;
     }
     emptyLoc++;
   }
-
-  r->outgoing[emptyLoc] = otherLoc;
 }
 
 /* *** Generate Rooms *** */

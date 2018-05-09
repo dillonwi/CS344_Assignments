@@ -7,11 +7,13 @@
 #include <stdlib.h> /* malloc */
 #include <stdio.h> /* file io and sprintf */
 #include <time.h> /* rand() seed */
-#include <pthread.h> /* Practicing multithreading with file IO */
 #include <sys/stat.h> /* mkdir */
-#include <unistd.h> /* getpid() */
+#include <fcntl.h> /* open() */
+#include <unistd.h> /* getpid() and close() */
 #include <sys/types.h> /* getpid() */
 #include <dirent.h> /* enter directories */
+#include <assert.h> /* assert */
+#include <string.h> /* strlen() */
 
 /*
  * I would normally put header and accompanying function definitions in a header
@@ -248,14 +250,6 @@ void generateRooms() {
 
 }
 
-void saveRoom(char* dirName) {
-
-  char filename[100];
-  sprintf(filename, "%s/%s.txt", dirName, rooms[i]->name);
-  fopen(filename, )
-
-}
-
 /* Saves rooms to files in a given directory. */
 void saveRooms() {
 
@@ -265,17 +259,42 @@ void saveRooms() {
   int result = mkdir(dirName, 0755);
 
   /* Open rooms file for writing */
-  pthread_t threads[7];
-  int results[7;]
   int i;
   for (i = 0; i < 7; i++) {
-    results[i] = pthread_create(&threads[i], NULL, saveRoom, dirName);
-    assert(0 == results[i]);
+    char filename[100];
+    sprintf(filename, "%s/%s.txt", dirName, rooms[i]->name);
+
+    int fd;
+    fd = open(filename, O_WRONLY | O_CREAT, 0755 | O_TRUNC);
+    if (fd < 0) {
+      fprintf(stderr, "Could not open %s\n", filename);
+      perror("Error in main()");
+      exit(1);
+    } else {
+      char name[100];
+      sprintf(name, "ROOM NAME: %s\n", rooms[i]->name);
+      write(fd, name, strlen(name) * sizeof(char));
+
+      int j = 0;
+      while (rooms[i]->outgoing[j] != -1) {
+        char buffer[100];
+        sprintf(buffer, "CONNECTION %d: %s\n", j, rooms[rooms[i]->outgoing[j]]->name);
+        write(fd, buffer, strlen(buffer) * sizeof(char));
+        j++;
+      }
+
+      char type[100];
+      sprintf(type, "ROOM TYPE: %s\n", rooms[i]->roomType);
+      write(fd, type, strlen(type) * sizeof(char));
+    }
+    close(fd);
   }
 
 }
 
 int main(int argc, char* argv[]) {
+
+  /* TODO: add at least 3 outgoing connections. */
 
   /* Initialize taken such that no names are taken. */
   int i;

@@ -71,25 +71,23 @@ int createConnection(int index, int otherLoc) {
   Room* o = rooms[otherLoc];
 
   /* Connect o to r */
-  int emptyLoc = 0;
-  int foundEmpty = 0;
-  while (!foundEmpty && emptyLoc < 6) {
-    if (o->outgoing[emptyLoc] == -1) {
-      foundEmpty = 1;
-      o->outgoing[emptyLoc] = index;
+  int loc1 = 0;
+  while (loc1 < 6) {
+    if (o->outgoing[loc1] == -1) {
+      o->outgoing[loc1] = index;
+      break;
     }
-    emptyLoc++;
+    loc1++;
   }
 
   /* Connect r to o */
-  emptyLoc = 0;
-  foundEmpty = 0;
-  while (!foundEmpty && emptyLoc < 6) {
-    if (r->outgoing[emptyLoc] == -1) {
-      foundEmpty = 1;
-      r->outgoing[emptyLoc] = otherLoc;
+  int loc2 = 0;
+  while (loc2 < 6) {
+    if (r->outgoing[loc2] == -1) {
+      r->outgoing[loc2] = otherLoc;
+      break;
     }
-    emptyLoc++;
+    loc2++;
   }
 }
 
@@ -143,21 +141,26 @@ int createConnection(int index, int otherLoc) {
    for (j = 0; j < 7; j++) {
      int numConnections = rand() % 4 + 3; /* 3 - 6 connections */
 
-     /* Create a list with n unique integers from 0-6 */
-     int roomList[numConnections];
      for (i = 0; i < numConnections; i++) {
-       int found = 0;
-       int loc = 0;
-       int roomNum = rand() % 7;
-       while (loc < i) {
-         if (roomList[loc] == roomNum || roomNum == j) {
-           roomNum = rand() % 7;
-           loc = 0;
-         }
-         loc++;
+
+      int roomNum;
+      do {
+        roomNum = rand() % 7;
+      } while (roomNum == j);
+
+      int found = 0;
+      int loc = 0;
+      while (loc < 6) {
+       if (rooms[j]->outgoing[loc] == roomNum) {
+         found = 1;
+         break;
        }
-       roomList[i] = roomNum;
-       createConnection(j, roomNum);
+       loc++;
+      }
+
+      if (!found) {
+        createConnection(j, roomNum);
+      }
      }
    }
  }
@@ -188,7 +191,7 @@ void saveRooms() {
       write(fd, name, strlen(name) * sizeof(char));
 
       int j = 0;
-      while (rooms[i]->outgoing[j] != -1 && j < 6) {
+      while (rooms[i]->outgoing[j] > -1 && j < 6) {
         char buffer[100];
         sprintf(buffer, "CONNECTION %d: %s\n", j, rooms[rooms[i]->outgoing[j]]->name);
         write(fd, buffer, strlen(buffer) * sizeof(char));

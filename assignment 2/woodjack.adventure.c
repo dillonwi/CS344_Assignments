@@ -143,11 +143,25 @@ void printConnections(Room* r) {
 
 char* getCommand() {
   char* line = malloc(sizeof(char) * 256);
+  memset(line, '\0', 256);
   int i;
-  if (fgets(line, sizeof(line), stdin)) {
+  if (fgets(line, 255, stdin)) {
     line[strcspn(line, "\n")] = 0;
   }
+  printf("\n");
   return line;
+}
+
+void printPath(char* history) {
+  int i = 0;
+  printf("HISTORY: ");
+  while (history[i] != '\0') {
+    if (history[i + 1] != '\0')
+      printf("%s, ", rooms[history[i] - 48]->name);
+    else
+      printf("%s.\n", rooms[history[i] - 48]->name);
+    i++;
+  }
 }
 
 int main() {
@@ -157,8 +171,21 @@ int main() {
   /* Find start room */
   Room* r = findStart();
 
+  /* Initialize steps and history */
+  char* history = malloc(sizeof(char) * 1024);
+  memset(history, '\0', 1024);
+  int h = 0;
+
+  int steps = 0;
+
   /* Start game loop */
   while (1) {
+    /* Add current room to history. */
+    int k = 0;
+    while (strcmp(rooms[k]->name, r->name) != 0) k++;
+    history[h] = k + 48;
+    h++;
+
     /* If this isn't the end room... */
     if (strcmp(r->roomType, "END_ROOM") != 0) {
         /* Print the name of the room */
@@ -168,44 +195,70 @@ int main() {
         printConnections(r);
 
         /* Ask "WHERE TO? >" */
-        printf("WHERE TO? >\n");
+        printf("WHERE TO? >");
 
         /* Parse user input */
         char* cmd = getCommand();
 
-        printf("%s\n", cmd);
-
         /* If invalid, print "HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN." */
-        /* Save user's choice (if valid) to path history and step count. */
+        /* Search through connections for possible room */
+        int found = 0;
+        int j = 0;
+        while (r->outgoing[j] != NULL) {
+          if (strcmp(cmd, r->outgoing[j]) == 0) {
+            found = 1;
+            break;
+          }
+          j++;
+        }
+        if (!found) {
+          printf("HUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+        } else {
+          /* Find the corresponding room in the rooms array */
+          j = 0;
+          while (strcmp(rooms[j]->name, cmd) != 0) j++;
+          r = rooms[j];
+
+          /* Increment step count. */
+          steps++;
+
+        }
 
         /* Free memory used to save command */
         free(cmd);
+
     } else {
-      // /* If this is the end room... */
-      //   /* Print the name of the room, and indicate this is the end room. */
-      //   printLocation(r);
-      //   printf("This is the end room.\n");
-      //
-      //   /* Print the number of steps, and the path */
-      //   /* Print "Congratulations!" */
-      //   printf("Congratulations!\n");
-      //   /* Exit the application */
-      //   break;
+      /* If this is the end room... */
+        /* Print the name of the room, and indicate this is the end room. */
+        printLocation(r);
+        printf("This is the end room.\n");
+
+        /* Print the number of steps, and the path */
+        printf("STEPS: %d\n", steps);
+        printPath(history);
+
+        /* Print "Congratulations!" */
+        printf("Congratulations!\n");
+
+        /* Free memory associated with rooms */
+        free(history);
+        int i;
+        for (i = 0; i < 7; i++) {
+          free(rooms[i]->name);
+          free(rooms[i]->roomType);
+          int j = 0;
+          while(rooms[i]->outgoing[j] != NULL) {
+            free(rooms[i]->outgoing[j]);
+            printf("1");
+            j++;
+          }
+          free(rooms[i]);
+        }
+
+        /* Exit the application */
+        break;
     }
   }
-
-  // /* Free memory associated with rooms */
-  // int i;
-  // for (i = 0; i < 7; i++) {
-  //   free(rooms[i]->name);
-  //   free(rooms[i]->roomType);
-  //   int j = 0;
-  //   while(rooms[i]->outgoing[j] != NULL) {
-  //     free(rooms[i]->outgoing[j]);
-  //     j++;
-  //   }
-  //   free(rooms[i]);
-  // }
 
   return 0;
 }

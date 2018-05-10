@@ -2,6 +2,7 @@
  * CS 344 Assignment 2 - Adventure Game
  * By Jack Woods - May 8th, 2018
  * woodjack@oregonstate.edu
+ * This file builds rooms for the adventure game.
  */
 
 #include <stdlib.h> /* malloc */
@@ -26,13 +27,6 @@ struct Room {
   char* roomType;  /* stores the index of neighboring rooms. */
 };
 
-typedef struct Location Location;
-struct Location {
-  int x;
-  int y;
-  int z;
-};
-
 char* names[] = {
   "Foyer",
   "Graveyard",
@@ -45,7 +39,6 @@ char* names[] = {
   "Wine Cellar",
   "Backyard"
 };
-
 int taken[10];
 
 /* Create array of room pointers */

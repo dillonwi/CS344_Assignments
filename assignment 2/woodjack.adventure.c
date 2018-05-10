@@ -136,9 +136,18 @@ void printConnections(Room* r) {
     if (r->outgoing[j + 1] != NULL)
       printf("%s, ",r->outgoing[j]);
     else
-      printf("%s.",r->outgoing[j]);
+      printf("%s.\n",r->outgoing[j]);
     j++;
   }
+}
+
+char* getCommand() {
+  char* line = malloc(sizeof(char) * 256);
+  int i;
+  if (fgets(line, sizeof(line), stdin)) {
+    line[strcspn(line, "\n")] = 0;
+  }
+  return line;
 }
 
 int main() {
@@ -160,12 +169,17 @@ int main() {
 
         /* Ask "WHERE TO? >" */
         printf("WHERE TO? >\n");
-        exit(1);
 
         /* Parse user input */
+        char* cmd = getCommand();
+
+        printf("%s\n", cmd);
 
         /* If invalid, print "HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN." */
         /* Save user's choice (if valid) to path history and step count. */
+
+        /* Free memory used to save command */
+        free(cmd);
     } else {
       // /* If this is the end room... */
       //   /* Print the name of the room, and indicate this is the end room. */

@@ -24,7 +24,7 @@
 typedef struct Room Room;
 struct Room {
  char* name;
- int outgoing[6]; /* Since all of the rooms are stored in an array, this */
+ char* outgoing[6]; /* Since all of the rooms are stored in an array, this */
  char* roomType;  /* stores the index of neighboring rooms. */
 };
 
@@ -32,7 +32,6 @@ struct Room {
 Room* rooms[7];
 
 void loadRoom(char* filename, int i) {
-  printf("%s\n", filename);
   FILE* fd = fopen(filename, "r");
 
   assert(fd);
@@ -42,15 +41,28 @@ void loadRoom(char* filename, int i) {
   char buffer[256];
 
   char* name = (char*) malloc(sizeof(char) * 256);
-  memset(r, '\0', sizeof(name));
+
+  fgets(buffer, 256, fd);
+  memset(name, '\0', sizeof(name));
   memcpy(name, &buffer[11], 255);
   r->name = name;
 
-  while(fgets(buffer, 256, fd) && buffer[12] == ':') {
-    printf("Connection");
-
+  int j = 0;
+  while(fgets(buffer, 256, fd)) {
+    if ((char) buffer[12] == ':') {
+      char* c = (char*) malloc(sizeof(char) * 256);
+      memset(c, '\0', sizeof(c));
+      memcpy(c, &buffer[14], 255);
+      r->outgoing[j] = c;
+      j++;
+    }
+    if ((char) buffer[9] == ':') {
+      char* c = (char*) malloc(sizeof(char) * 256);
+      memset(c, '\0', sizeof(c));
+      memcpy(c, &buffer[11], 255);
+      r->roomType = c;
+    }
   }
-
   fclose(fd);
 }
 

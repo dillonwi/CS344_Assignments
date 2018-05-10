@@ -1,0 +1,6 @@
+ROOM NAME: Living Room
+CONNECTION 0: Basement
+CONNECTION 1: Wine Cellar
+CONNECTION 2: Backyard
+CONNECTION 3: Office
+ROOM TYPE: MID_ROOM

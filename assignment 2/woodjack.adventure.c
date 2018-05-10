@@ -83,25 +83,34 @@ void loadRoom(char* filename, int i) {
 }
 
 void loadRooms() {
+  /* Since each directory has a unique PID appended to the end of its name, the
+     application needs to search for the complete directory name. */
   struct dirent *de;
 	DIR *dr = opendir(".");
 
-	if (!dr) {
-		printf("Could not open current directory." );
-	}
+  /* If the directory is null, throw an error. */
+	assert(dr);
 
+  /* Create directory name buffer */
   char dirName[256];
+
+  /* Search through all directory entries for one that starts with
+     woodjack.rooms. */
 	while (de = readdir(dr)) {
+    /* woodjack.rooms. is 15 characters long, with 1 null terminating char */
     char buffer[16];
     memcpy(buffer, de->d_name, 15);
 
     if (strcmp(buffer, "woodjack.rooms.") == 0) {
-      memcpy(dirName, de->d_name, 256);
+      memcpy(dirName, de->d_name, 256); /* Found it! */
     }
+
   }
 	closedir(dr);
-
+  /* Close current directory (.), and open a new directory with the new name. */
   dr = opendir(dirName);
+
+  /* Read each file in this directory, and create a room object */
   int i = 0;
   while (de = readdir(dr)) {
     if ((strcmp(de->d_name, ".") != 0) && (strcmp(de->d_name, "..") != 0)) {
@@ -116,6 +125,7 @@ void loadRooms() {
 }
 
 Room* findStart() {
+  /* Search room array for the starting room */
   int i = 0;
   while (strcmp(rooms[i]->roomType, "START_ROOM") != 0 && i < 7) {
     i++;
@@ -123,17 +133,13 @@ Room* findStart() {
   return rooms[i];
 }
 
-void printLocation(Room* r) {
-  char buffer[100];
-  sprintf(buffer, "Current Location: %s", r->name);
-  printf("%s\n", buffer);
-}
-
+/* This function iterates through all of the available connections, and prints
+   their names to stdout */
 void printConnections(Room* r) {
   int j = 0;
   printf("POSSIBLE CONNECTIONS: ");
-  while (r->outgoing[j] != NULL) {
-    if (r->outgoing[j + 1] != NULL)
+  while (r->outgoing[j] != NULL && j < 6) { /* Only 6 connections max */
+    if (r->outgoing[j + 1] != NULL && j + 1 < 6)
       printf("%s, ",r->outgoing[j]);
     else
       printf("%s.\n",r->outgoing[j]);
@@ -142,16 +148,26 @@ void printConnections(Room* r) {
 }
 
 char* getCommand() {
+  /* create buffer for reading from stdin */
   char* line = malloc(sizeof(char) * 256);
+
+  /* Initialize buffer with null terminators */
   memset(line, '\0', 256);
-  int i;
+
+
   if (fgets(line, 255, stdin)) {
+    /* Delete newline chars */
     line[strcspn(line, "\n")] = 0;
   }
+
+  /* Print a newline for formatting */
   printf("\n");
+
   return line;
 }
 
+/* This function converts the characters in the history array to integers, then
+   retrieves the name of each room from the rooms array. */
 void printPath(char* history) {
   int i = 0;
   printf("HISTORY: ");
@@ -172,10 +188,14 @@ int main() {
   Room* r = findStart();
 
   /* Initialize steps and history */
+  /* History is saved by storing a room's index in this character array. Yes, I
+     could have just used an integer array, but this made sense to me for some
+     reason while I was working on this late at night. */
   char* history = malloc(sizeof(char) * 1024);
   memset(history, '\0', 1024);
   int h = 0;
 
+  /* Step Counter */
   int steps = 0;
 
   /* Start game loop */
@@ -189,7 +209,7 @@ int main() {
     /* If this isn't the end room... */
     if (strcmp(r->roomType, "END_ROOM") != 0) {
         /* Print the name of the room */
-        printLocation(r);
+        printf("CURRENT LOCATION: %s\n", r->name);
 
         /* Print possible connections */
         printConnections(r);

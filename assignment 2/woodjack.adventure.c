@@ -31,65 +31,60 @@ struct Room {
 /* Create array of room pointers */
 Room* rooms[7];
 
-Room* loadRooms() {
+void loadRoom(char* filename, int i) {
+  printf("%s\n", filename);
+  FILE* fd = fopen(filename, "r");
 
-  DIR *d;
-  struct dirent *de;
-  d = opendir(".");
-  if (d) {
-    int found = 0;
-    while ((de = readdir(d)) != NULL) {
+  assert(fd);
 
-      char buffer[15];
-      snprintf(buffer, 15, "%s", de->d_name);
-      printf("%s\n", buffer);
+  Room* r = (Room*) malloc(sizeof(Room));
 
-      if (strcmp(buffer, "woodjack.rooms.") != 0) {
-        found = 1;
-        printf("yeah");
-        break; /* Found it! */
-      }
+  char buffer[256];
 
-    }
-    closedir(d);
+  char* name = (char*) malloc(sizeof(char) * 256);
+  memset(r, '\0', sizeof(name));
+  memcpy(name, &buffer[11], 255);
+  r->name = name;
+
+  while(fgets(buffer, 256, fd) && buffer[12] == ':') {
+    printf("Connection");
+
   }
 
-  // /* Look for directory with rooms */
-  // struct dirent* de;  /* Pointer for directory entry */
-  // DIR* dr = opendir(".");
-  // assert (dr != NULL);
-  // int found = 0;
-  // while (de = readdir(dr)) {
-  //   char buffer[15];
-  //   snprintf(buffer, 15, "%s", de->d_name);
-  //   printf("%s\n", buffer);
-  //   if (strcmp(buffer, "woodjack.rooms.") != 0) {
-  //     found = 1;
-  //     printf("yeah");
-  //     break; /* Found it! */
-  //   }
-  // }
-  // closedir(dr);
+  fclose(fd);
+}
 
-  // /* Open the directory that was found */
-  // DIR* dr2 = opendir(de->d_name);
-  // closedir(dr);
-  //
-  // /* Load the contents of each file into a room array */
-  // while ((de = readdir(dr2)) != NULL) {
-  //   printf("Read dir: %s\n", de->d_name);
-  //   //readContents(de->d_name);
-  // }
-  //
-  // /* Search for the starting room */
-  // int i;
-  // while (i < 7) {
-  //   if (rooms[i]->roomType == "START_ROOM") {
-  //     /* Return a pointer to the starting room */
-  //     return rooms[i];
-  //   }
-  // }
-  // return rooms[0];
+void loadRooms() {
+  struct dirent *de;
+	DIR *dr = opendir(".");
+
+	if (!dr) {
+		printf("Could not open current directory." );
+	}
+
+  char dirName[256];
+	while (de = readdir(dr)) {
+    char buffer[16];
+    memcpy(buffer, de->d_name, 15);
+
+    if (strcmp(buffer, "woodjack.rooms.") == 0) {
+      memcpy(dirName, de->d_name, 256);
+    }
+  }
+	closedir(dr);
+
+  dr = opendir(dirName);
+  int i = 0;
+  while (de = readdir(dr)) {
+    if ((strcmp(de->d_name, ".") != 0) && (strcmp(de->d_name, "..") != 0)) {
+      char filename[256];
+      sprintf(filename, "%s/%s", dirName, de->d_name);
+      loadRoom(filename, i);
+      i++;
+    }
+  }
+  closedir(dr);
+
 }
 
 void printLocation(Room* r) {
@@ -98,45 +93,7 @@ void printLocation(Room* r) {
 }
 
 int main() {
-  /* Load rooms into memory */
-  Room* r = loadRooms();
-
-  /* Start game loop */
-  while (1) {
-    /* If this isn't the end room... */
-    if (r->roomType != "END_ROOM") {
-        /* Print the name of the room */
-        //printLocation(r);
-
-        /* Print possible connections */
-        //char** connections = printConnections(r);
-
-        /* Ask "WHERE TO? >" */
-        printf("WHERE TO? >");
-
-        /* Parse user input */
-
-        /* If invalid, print "HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN." */
-        /* Save user's choice (if valid) to path history and step count. */
-    } else {
-      /* If this is the end room... */
-        /* Print the name of the room, and indicate this is the end room. */
-        printLocation(r);
-        printf("This is the end room.\n");
-
-        /* Print the number of steps, and the path */
-        /* Print "Congratulations!" */
-        printf("Congratulations!\n");
-        /* Exit the application */
-        break;
-    }
-  }
-
-  /* Free memory associated with rooms */
-  int i;
-  for (i = 0; i < 7; i++) {
-    free(rooms[i]);
-  }
+  loadRooms();
 
   return 0;
 }

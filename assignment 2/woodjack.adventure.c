@@ -182,30 +182,32 @@ void printPath(char* history) {
 }
 
 void* saveTime() {
+  /* Get time */
   time_t rawTime = time(NULL);
   struct tm* t = localtime(&rawTime);
 
+  /* Prep buffer for write operation */
   char buffer[40];
   memset(&buffer, '\0', 40);
-
   strftime(buffer, 40, "%l:%M %p, %A, %B %d, %Y", t);
 
+  /* Open file, write date string (32 characters in length) and close file */
   FILE* fd = fopen("currentTime.txt", "w");
-
   fwrite(buffer, 1, 32, fd);
-
   fclose(fd);
 }
 
 void printTime() {
+  /* Prep buffer for read operation */
   char buffer[40];
   memset(&buffer, '\0', 40);
 
+  /* Read file, and replace newline characters will null terminators. */
   FILE* fd = fopen("currentTime.txt", "r");
-
   fgets(buffer, 256, fd);
   buffer[strcspn(buffer, "\n")] = 0;
 
+  /* Format and print time. */
   printf("%s\n\n", buffer);
 
   fclose(fd);

@@ -94,6 +94,7 @@ void loadRooms() {
 
   /* Create directory name buffer */
   char dirName[256];
+  memset(dirName, '\0', 256);
 
   /* Search through all directory entries for one that starts with
      woodjack.rooms. */
@@ -102,10 +103,20 @@ void loadRooms() {
     char buffer[16];
     memcpy(buffer, de->d_name, 15);
 
-    if (strcmp(buffer, "woodjack.rooms.") == 0) {
-      memcpy(dirName, de->d_name, 256); /* Found it! */
-    }
+    /* Always select the first directory found */
+    if (dirName[0] == '\0' && strcmp(buffer, "woodjack.rooms.") == 0) {
+      memcpy(dirName, de->d_name, 256); /* Found one! */
+    } else {
 
+      /* Compare modification times to see which is newer. Select the newest */
+      struct stat stat1;
+      struct stat stat2;
+      if (!(stat(dirName, &stat1) || stat(de->d_name, &stat2))) {
+        if (stat2.st_mtime > stat1.st_mtime) {
+          memcpy(dirName, de->d_name, 256); /* Found a better one! */
+        }
+      }
+    }
   }
 	closedir(dr);
   /* Close current directory (.), and open a new directory with the new name. */

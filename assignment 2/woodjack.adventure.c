@@ -171,17 +171,13 @@ char* getCommand() {
    retrieves the name of each room from the rooms array. */
 void printPath(char* history) {
   int i = 0;
-  printf("HISTORY: ");
   while (history[i] != '\0') {
-    if (history[i + 1] != '\0')
-      printf("%s, ", rooms[history[i] - 48]->name);
-    else
-      printf("%s.\n", rooms[history[i] - 48]->name);
+    printf("%s\n", rooms[history[i] - 48]->name);
     i++;
   }
 }
 
-void* saveTime() {
+void* saveTime(void* mut) {
   /* Get time */
   time_t rawTime = time(NULL);
   struct tm* t = localtime(&rawTime);
@@ -192,17 +188,20 @@ void* saveTime() {
   strftime(buffer, 40, "%l:%M %p, %A, %B %d, %Y", t);
 
   /* Open file, write date string (32 characters in length) and close file */
+  pthread_mutex_lock(mut);
   FILE* fd = fopen("currentTime.txt", "w");
   fwrite(buffer, 1, 32, fd);
   fclose(fd);
+  pthread_mutex_unlock(mut);
 }
 
-void printTime() {
+void printTime(pthread_mutex_t* t) {
   /* Prep buffer for read operation */
   char buffer[40];
   memset(&buffer, '\0', 40);
 
   /* Read file, and replace newline characters will null terminators. */
+  pthread_mutex_lock(t);
   FILE* fd = fopen("currentTime.txt", "r");
   fgets(buffer, 256, fd);
   buffer[strcspn(buffer, "\n")] = 0;
@@ -211,6 +210,7 @@ void printTime() {
   printf("%s\n\n", buffer);
 
   fclose(fd);
+  pthread_mutex_unlock(t);
 }
 
 int main() {
@@ -267,14 +267,14 @@ int main() {
 
           /* Create thread */
           pthread_t tThread;
-          int result = pthread_create(&tThread, NULL, saveTime, NULL);
+          int result = pthread_create(&tThread, NULL, saveTime, &t);
           assert(result == 0);
 
           /* Block main thread until tThread resolves */
           result = pthread_join(tThread, NULL);
 
           /* Read the time from the newly-created file */
-          printTime();
+          printTime(&t);
 
           h--; /* This command should not make an entry in the user's history */
         } else {
@@ -307,16 +307,13 @@ int main() {
 
     } else {
       /* If this is the end room... */
-        /* Print the name of the room, and indicate this is the end room. */
-        printf("CURRENT LOCATION: %s\n", r->name);
-        printf("This is the end room.\n");
+        /* Indicate this is the end room. */
+        printf("YOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
 
         /* Print the number of steps, and the path */
-        printf("STEPS: %d\n", steps);
+        printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", steps);
         printPath(history);
 
-        /* Print "Congratulations!" */
-        printf("Congratulations!\n");
 
         /* Free memory associated with rooms */
         // free(history);

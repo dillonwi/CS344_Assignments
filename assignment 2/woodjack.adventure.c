@@ -16,6 +16,7 @@
 #include <dirent.h> /* enter directories */
 #include <assert.h> /* assert */
 #include <string.h> /* strlen() */
+#include <pthread.h> /* multithreading */
 
 /*
 * I would normally put header and accompanying function definitions in a header
@@ -180,12 +181,45 @@ void printPath(char* history) {
   }
 }
 
+void* saveTime() {
+  time_t rawTime = time(NULL);
+  struct tm* t = localtime(&rawTime);
+
+  char buffer[40];
+  memset(&buffer, '\0', 40);
+
+  strftime(buffer, 40, "%l:%M %p, %A, %B %d, %Y", t);
+
+  FILE* fd = fopen("currentTime.txt", "w");
+
+  fwrite(buffer, 1, 32, fd);
+
+  fclose(fd);
+}
+
+void printTime() {
+  char buffer[40];
+  memset(&buffer, '\0', 40);
+
+  FILE* fd = fopen("currentTime.txt", "r");
+
+  fgets(buffer, 256, fd);
+  buffer[strcspn(buffer, "\n")] = 0;
+
+  printf("%s\n\n", buffer);
+
+  fclose(fd);
+}
+
 int main() {
   /* Load rooms into memory */
   loadRooms();
 
   /* Find start room */
   Room* r = findStart();
+
+  /* Time file mutex */
+  pthread_mutex_t t = PTHREAD_MUTEX_INITIALIZER;
 
   /* Initialize steps and history */
   /* History is saved by storing a room's index in this character array. Yes, I
@@ -221,27 +255,49 @@ int main() {
         char* cmd = getCommand();
 
         /* If invalid, print "HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN." */
-        /* Search through connections for possible room */
-        int found = 0;
-        int j = 0;
-        while (r->outgoing[j] != NULL) {
-          if (strcmp(cmd, r->outgoing[j]) == 0) {
-            found = 1;
-            break;
-          }
-          j++;
-        }
-        if (!found) {
-          printf("HUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+
+        /* Check for time command */
+        if (strcmp(cmd, "time") == 0) {
+          /* This use of threading is specified by the assignment. I don't
+             understand why threads were used here, other than for the sake of
+             practice alone. It appears to yield no performace gain since the
+             main thread is blocked until tThread completes. */
+
+          /* Create thread */
+          pthread_t tThread;
+          int result = pthread_create(&tThread, NULL, saveTime, NULL);
+          assert(result == 0);
+
+          /* Block main thread until tThread resolves */
+          result = pthread_join(tThread, NULL);
+
+          /* Read the time from the newly-created file */
+          printTime();
+
+          h--; /* This command should not make an entry in the user's history */
         } else {
-          /* Find the corresponding room in the rooms array */
-          j = 0;
-          while (strcmp(rooms[j]->name, cmd) != 0) j++;
-          r = rooms[j];
+          /* Search through connections for possible room */
+          int found = 0;
+          int j = 0;
+          while (r->outgoing[j] != NULL) {
+            if (strcmp(cmd, r->outgoing[j]) == 0) {
+              found = 1;
+              break;
+            }
+            j++;
+          }
+          if (!found) {
+            printf("HUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+          } else {
+            /* Find the corresponding room in the rooms array */
+            j = 0;
+            while (strcmp(rooms[j]->name, cmd) != 0) j++;
+            r = rooms[j];
 
-          /* Increment step count. */
-          steps++;
+            /* Increment step count. */
+            steps++;
 
+          }
         }
 
         /* Free memory used to save command */
@@ -250,7 +306,7 @@ int main() {
     } else {
       /* If this is the end room... */
         /* Print the name of the room, and indicate this is the end room. */
-        printLocation(r);
+        printf("CURRENT LOCATION: %s\n", r->name);
         printf("This is the end room.\n");
 
         /* Print the number of steps, and the path */
@@ -261,21 +317,22 @@ int main() {
         printf("Congratulations!\n");
 
         /* Free memory associated with rooms */
-        free(history);
-        int i;
-        for (i = 0; i < 7; i++) {
-          free(rooms[i]->name);
-          free(rooms[i]->roomType);
-          int j = 0;
-          while(rooms[i]->outgoing[j] != NULL) {
-            free(rooms[i]->outgoing[j]);
-            printf("1");
-            j++;
-          }
-          free(rooms[i]);
-        }
+        // free(history);
+        // int i;
+        // for (i = 0; i < 7; i++) {
+        //   free(rooms[i]->name);
+        //   free(rooms[i]->roomType);
+        //   int j = 0;
+        //   while(rooms[i]->outgoing[j] != NULL) {
+        //     free(rooms[i]->outgoing[j]);
+        //     printf("1");
+        //     j++;
+        //   }
+        //   free(rooms[i]);
+        // }
 
         /* Exit the application */
+        pthread_mutex_destroy(&t);
         break;
     }
   }

@@ -236,12 +236,6 @@ int main() {
 
   /* Start game loop */
   while (1) {
-    /* Add current room to history. */
-    int k = 0;
-    while (strcmp(rooms[k]->name, r->name) != 0) k++;
-    history[h] = k + 48;
-    h++;
-
     /* If this isn't the end room... */
     if (strcmp(r->roomType, "END_ROOM") != 0) {
         /* Print the name of the room */
@@ -295,6 +289,12 @@ int main() {
             j = 0;
             while (strcmp(rooms[j]->name, cmd) != 0) j++;
             r = rooms[j];
+
+            /* Add new room to history. */
+            int k = 0;
+            while (strcmp(rooms[k]->name, r->name) != 0) k++;
+            history[h] = k + 48;
+            h++;
 
             /* Increment step count. */
             steps++;

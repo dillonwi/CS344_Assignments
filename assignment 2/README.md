@@ -1,4 +1,9 @@
 ## Program 2
+### To Run
+Compile with gcc: `$gcc -o buildRooms woodjack.buildrooms.c` and `gcc -o adventure woodjack.adventure.c`.
+Next, run the buildRooms application: `./buildRooms`. This can be run multiple times, but the adventure program will only load the most recent build.
+Lastly, run the adventure application: `./adventure`.
+### Intro
 This assignment asks you to write a simple game akin to old text adventure games like [Adventure](http://en.wikipedia.org/wiki/Colossal_Cave_Adventure):
 
 ### Overview

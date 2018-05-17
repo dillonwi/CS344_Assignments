@@ -9,7 +9,7 @@ def createFile(numFiles, processID):
     return open(name, "w+")
 
 def randomChar():
-    num = random.randint(0,26) + 97
+    num = random.randint(0,25) + 97
     return str(chr(num))
 
 

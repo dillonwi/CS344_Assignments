@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# This is a testing script for assignment 3.
+
+# Get number of tests to run.
+tests=$1
+
+# Number of failures
+failures=0
+
+# Iterator
+testNum=0
+
+# Test the output of the python script. Record the outcome in array.
+while test $testNum -lt $tests
+do
+  while IFS="$(printf '\n')" read line
+  do
+    echo $line
+  done <<< $(python3 mypython.py)
+  testNum=$((testNum + 1))
+done
+
+# Print the number of failures
+echo $failures
+echo " out of "
+echo $tests
+echo " tests."

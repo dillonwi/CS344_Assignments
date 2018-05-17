@@ -1,3 +1,5 @@
+# NOTE to grader: Please run this script with Python3. Thank you! -Jack
+
 import random
 import os
 

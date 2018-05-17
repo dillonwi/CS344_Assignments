@@ -41,7 +41,16 @@ def randomChars(n):
 # Calculate n random numbers from 1 to 42 inclusive, print the numbers
 # to stdout, and then multiply them.
 def randomNums(n):
-    print(1)
+    numbers = list()
+    product = 1
+
+    for i in range(n):
+        num = random.randint(1,42)
+        numbers.append(num)
+        product = product * num
+        print(str(num))
+
+    print(str(product))
 
 # Main function
 def main():

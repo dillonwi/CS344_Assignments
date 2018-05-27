@@ -1,4 +1,10 @@
 # Program 3 – CS 344
+## How to Compile
+Run the following command to compile Program 3:
+```
+gcc -o smallsh smallsh.
+```
+
 ## Overview
 
 In this assignment you will write your own shell in C, similar to bash. No other languages, including C++, are allowed, though you may use any version of C you like, such as C99. The shell will run command line instructions and return the results similar to other shells you have used, but without many of their fancier features.

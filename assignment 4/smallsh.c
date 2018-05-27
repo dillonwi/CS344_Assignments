@@ -98,7 +98,7 @@ int parseCommand(char* cmd, int status) {
   fflush(stdout);
 
   /* Check for comment first */
-  if (cmd[1] == '#' || strlen(cmd) == 0) return 0;
+  if (cmd[0] == '#' || strlen(cmd) == 1) return 0;
 
   /* Check for built-in commands */
   if (strcmp(cmd, "exit\n") == 0) return -1;

@@ -106,7 +106,11 @@ int parseCommand(char* cmd, int status) {
     printf("%d\n", status);
   }
   else if(strncmp(cmd, "cd", 2) == 0) {
-    chdir(&cmd[2]);
+    char token = '\n';
+    strtok(&cmd[3], &token);
+    if (chdir(&cmd[3]) == -1) {
+      printf("Error! %s\n", strerror(errno));
+    }
   } else {
     /* Call another process and manage it */
     return mngProc(cmd);

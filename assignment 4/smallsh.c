@@ -11,41 +11,46 @@
 
 
 /* Linear search for space character */
-int findSpace(char* str) {
+int findSpace(char* str, int pos) {
   int i;
-  for (i = 0; i < strlen(str); i++) {
-    if (str[i] == ' ') return i;
+  for (i = pos; i < strlen(str) - 1; i++) {
+    if (str[i] == ' ') {
+      return i;
+    }
   }
   return -1;
 }
 
 /* Create an arguments array from a string */
-void buildArgv(char** current, char* str, int n) {
+void buildArgv(char** current, char* str) {
     /* Parse command args */
-  int pos = 0;
-  while(pos = findSpace(&str[pos]) != -1) {
+  int max = strlen(str) - 1;
+
+  int arg = 0;
+  int prevPos = 0;
+  int pos = findSpace(str, 0);
+  while(prevPos != -1) {
+    int end = pos != -1 ? pos: max;
+    if (prevPos != 0) prevPos++;
+    char * s = (char *) malloc((end - prevPos) * sizeof(char));
     int i;
-    for(i = 0; i < n; i++) {
-      current[i] = (char*) &str[pos + i];
+    for(i = 0; i < end - prevPos; i++) {
+      s[i] = str[prevPos + i];
     }
+    current[arg] = s;
+    arg++;
+    prevPos = pos;
+    pos = findSpace(str, pos + 1);
   }
 }
 
-void executeCommand(char* cmd) {
-  /* Build char* const* array for command */
-  /* Get command length */
-  int cSize = findSpace(cmd) != -1 ? cSize : strlen(cmd);
-  char c[cSize];
-  int i;
-  for (i = 0; i < cSize - 1; i++) {
-    c[i] = cmd[i]; /* Populate char array with constant pointers */
-  }
-  c[cSize - 1] = NULL;
-  printf("1%s1", c);
+int commandLen(char* cmd) {
 
+  /* Get command length */
+  int cSize = findSpace(cmd, 0) != -1 ? cSize : strlen(cmd);
   /* Count the number of arguments */
   int n = 0;
-  i = 0;
+  int i = 0;
   for (i = 0; i < strlen(cmd); i++) {
     if ((int)cmd[i] == 32) {
       n++;
@@ -53,19 +58,21 @@ void executeCommand(char* cmd) {
   }
   n += 2; /* There is always 1 NULL argument that is appended, and 1 uncounted
              argument */
+  return n;
+}
+
+void executeCommand(char* cmd) {
+  /* Build char* const* array for command */
+  int n = commandLen(cmd);
 
   char* argv[n];
-  if (n > 2) printf ("WTF");
-  if (n > 2)
-    buildArgv(argv, cmd, n); /* Manipulates argv */
-  else
-    argv[0] = c;
-
+  buildArgv(argv, cmd); /* Manipulates argv */
   argv[n-1] = NULL; /* Last arg is always 0 */
 
 
   /* Execute command */
-  if (execlp(c, argv[0], NULL) == -1) {
+  printf("a%sa", argv[0]);
+  if (execvp(argv[0], argv) == -1) {
      printf("Error! %s\n", strerror(errno));
   }
 }

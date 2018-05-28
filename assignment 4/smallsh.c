@@ -178,7 +178,7 @@ int main() {
   int quit = 0;
   while (!quit) {
     /* Check to see if child exited */
-    waitpid(-1, &childStatus, 0);
+    waitpid(-1, &childStatus, WNOHANG);
     if (childStatus != -5 && WIFEXITED(childStatus)) {
       printf("background pid %d is done: exit value %d\n", child, WEXITSTATUS(childStatus));
       childStatus = -5;

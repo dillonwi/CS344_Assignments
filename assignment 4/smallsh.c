@@ -88,7 +88,10 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
 
     /* Create FD and re-assign input */
     int targetFD1 = open(name, O_RDONLY);
-    if (targetFD1 == -1) printf("ERROR");
+    if (targetFD1 < 0) {
+      fprintf(stderr, "cannot open %s for input\n", name);
+      exit(1);
+    }
     if(dup2(targetFD1, STDIN_FILENO) == -1) {
       printf("Error!");
     }
@@ -106,7 +109,10 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
 
     /* Create FD and re-assign input */
     int targetFD2 = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (targetFD2 == -1) printf("ERROR");
+    if (targetFD2 < 0) {
+      fprintf(stderr, "cannot open %s for input\n", name);
+      exit(1);
+    }
     if(dup2(targetFD2, STDOUT_FILENO) == -1) {
       printf("Error!");
     }
@@ -150,7 +156,7 @@ int mngProc(char* cmd) {
 
   } else {
     int status;
-    wait(&status);
+    waitpid(spawnpid, &status, 0);
     return status;
   }
 }
@@ -164,7 +170,7 @@ int parseCommand(char* cmd, int status) {
   /* Check for built-in commands */
   if (strcmp(cmd, "exit\n") == 0) return -1;
   else if (strcmp(cmd, "status\n") == 0) {
-    printf("exit value %d\n", status);
+    printf("exit value %d\n", status / 256);
   }
   else if(strncmp(cmd, "cd", 2) == 0) {
     char token = '\n';

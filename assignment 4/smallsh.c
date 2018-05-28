@@ -168,9 +168,13 @@ int parseCommand(char* cmd, int status) {
   else if(strncmp(cmd, "cd", 2) == 0) {
     char token = '\n';
     strtok(&cmd[3], &token);
-    if (chdir(&cmd[3]) == -1) {
-      printf("Error! %s\n", strerror(errno));
+    if (strlen(&cmd[3]) == 0) chdir(getenv("HOME"));
+    else {
+      if (chdir(&cmd[3]) == -1) {
+        printf("Error! %s\n", strerror(errno));
+      }
     }
+
   } else {
     /* Call another process and manage it */
     return mngProc(cmd);

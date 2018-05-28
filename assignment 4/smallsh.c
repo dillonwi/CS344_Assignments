@@ -141,81 +141,99 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
   exit(1);
 }
 
-int mngProc(char* cmd) {
-  fflush(stdout);
-  pid_t spawnpid = fork();
-  int status = 0;
-  if(spawnpid == -1) {
-    perror("Hull Breach!");
-    return -1;
-
-  } else if (spawnpid == 0) {
-    int reDirOut = searchPipe(0, cmd);
-    int reDirIn = searchPipe(1, cmd);
-    setInOut(cmd, reDirOut, reDirIn);
-
-  } else {
-    int status;
-    waitpid(spawnpid, &status, 0);
-    return status;
+void nullOutput() {
+  /* Create FD and re-assign input */
+  int targetFD = open("/dev/null", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if (targetFD < 0) {
+    fprintf(stderr, "cannot open /dev/null for input\n");
+    exit(1);
   }
-}
-
-int parseCommand(char* cmd, int status) {
-  fflush(stdout);
-
-  /* Check for comment first */
-  if (cmd[0] == '#' || strlen(cmd) == 1) return 0;
-
-  /* Check for built-in commands */
-  if (strcmp(cmd, "exit\n") == 0) return -1;
-  else if (strcmp(cmd, "status\n") == 0) {
-    printf("exit value %d\n", status / 256);
+  if(dup2(targetFD, STDOUT_FILENO) == -1) {
+    printf("Error!");
   }
-  else if(strncmp(cmd, "cd", 2) == 0) {
-    char token = '\n';
-    strtok(&cmd[3], &token);
-    if (strlen(&cmd[3]) == 0) chdir(getenv("HOME"));
-    else {
-      if (chdir(&cmd[3]) == -1) {
-        printf("Error! %s\n", strerror(errno));
-        return -1;
-      }
-    }
-
-  } else {
-    /* Call another process and manage it */
-    return mngProc(cmd);
-  }
-
-  return 0;
 }
 
 int main() {
   /* Create command buffer */
-  char* cmdBuffer;
+  char* cmd;
   size_t bufSize = BUF_SIZE;
-  cmdBuffer = (char *) malloc(BUF_SIZE * sizeof(char));
+  cmd = (char *) malloc(BUF_SIZE * sizeof(char));
+
+  pid_t child;
 
   /* Other useful variables */
   int status = 0;
+  int childStatus = -5;
 
   /* Main application loop */
   int quit = 0;
   while (!quit) {
+    /* Check to see if child exited */
+    waitpid(-1, &childStatus, 0);
+    if (childStatus != -5 && WIFEXITED(childStatus)) {
+      printf("background pid %d is done: exit value %d\n", child, WEXITSTATUS(childStatus));
+    }
 
     /* Prompt user for input */
     printf(": ");
-    int bytesRead = getline(&cmdBuffer, &bufSize, stdin);
+    int bytesRead = getline(&cmd, &bufSize, stdin);
 
     /* Parse command */
-    status = parseCommand(cmdBuffer, status);
+    fflush(stdout);
+
+    /* Check for comment first */
+    if (cmd[0] == '#' || strlen(cmd) == 1) return 0;
+
+    /* Check for built-in commands */
+    if (strcmp(cmd, "exit\n") == 0) return 0;
+    else if (strncmp(cmd, "status", 6) == 0) {
+      printf("exit value %d\n", status / 256);
+    }
+    else if(strncmp(cmd, "cd", 2) == 0) {
+      char token = '\n';
+      strtok(&cmd[3], &token);
+      if (strlen(&cmd[3]) == 0) chdir(getenv("HOME"));
+      else {
+        if (chdir(&cmd[3]) == -1) {
+          printf("Error! %s\n", strerror(errno));
+          status = -1;
+        }
+      }
+    } else {
+      /* Call another process and manage it */
+      int bg = 0;
+      if(cmd[strlen(cmd) - 2] == '&') {
+        bg = 1;
+        cmd[strlen(cmd) - 2] = '\0';
+      }
+      child = fork();
+      if(child == -1) {
+        perror("Hull Breach!");
+        status = -1;
+
+      } else if (child == 0) {
+        if (bg) nullOutput();
+        int reDirOut = searchPipe(0, cmd);
+        int reDirIn = searchPipe(1, cmd);
+        setInOut(cmd, reDirOut, reDirIn);
+
+      } else {
+        if(bg) {
+          printf("background pid is %i\n", (int) child);
+          waitpid(child, &childStatus, WNOHANG);
+        } else {
+          waitpid(child, &status, 0);
+        }
+      }
+    }
+
+
     if (status < 0) {
       printf("Exiting...\n");
       return status;
     }
   }
 
-  free(cmdBuffer);
+  free(cmd);
   return 0;
 }

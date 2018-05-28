@@ -77,21 +77,23 @@ int searchPipe(int c, char* cmd) {
 
 void setInOut(char* cmd, int reDirOut, int reDirIn) {
   int endCmd = INT_MAX;
-  char* name;
-  int targetFD1;
-  int targetFD2;
 
   if (reDirIn != -1) {
     endCmd = reDirIn;
     reDirIn += 2;
     /* Save the name of the new input */
-    int end = findSpace(cmd, reDirOut) != -1 ? findSpace(cmd, reDirOut) : strlen(cmd) - 1;
-    name = (char*) malloc((end - reDirIn) * sizeof(char));
+    int end = findSpace(cmd, reDirIn) != -1 ? findSpace(cmd, reDirIn) : strlen(cmd) - 1;
+    char* name = (char*) malloc((end - reDirIn) * sizeof(char));
     memcpy(name, &cmd[reDirIn], (end - reDirIn));
 
     /* Create FD and re-assign input */
-    targetFD1 = open(name, O_RDONLY);
-    dup2(targetFD1, 0);
+    int targetFD1 = open(name, O_RDONLY);
+    if (targetFD1 == -1) printf("ERROR");
+    if(dup2(targetFD1, STDIN_FILENO) == -1) {
+      printf("Error!");
+    }
+
+    free(name);
   }
 
   if (reDirOut != -1) {
@@ -103,9 +105,16 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
     memcpy(name, &cmd[reDirOut], (end - reDirOut));
 
     /* Create FD and re-assign input */
-    targetFD2 = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    dup2(targetFD2, 1);
+    int targetFD2 = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (targetFD2 == -1) printf("ERROR");
+    if(dup2(targetFD2, STDOUT_FILENO) == -1) {
+      printf("Error!");
+    }
+
+    free(name);
   }
+
+  /* Format command */
   endCmd = endCmd < INT_MAX ? endCmd - 1 : strlen(cmd) - 1;
   char* command = (char*) malloc(endCmd * sizeof(char));
   memcpy(command, cmd, endCmd);
@@ -117,32 +126,31 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
   buildArgv(argv, command); /* Manipulates argv */
   argv[n-1] = NULL; /* Last arg is always 0 */
 
-  printf("%d", n);
 
   /* Execute command */
   if (execvp(argv[0], argv) == -1) {
      printf("Error! %s\n", strerror(errno));
      exit(1);
   }
+  exit(1);
 }
 
 int mngProc(char* cmd) {
   fflush(stdout);
-  int reDirOut = searchPipe(0, cmd);
-  int reDirIn = searchPipe(1, cmd);
   pid_t spawnpid = fork();
   int status = 0;
-  switch (spawnpid) {
-    case -1:
-      perror("Hull Breach!");
-      return -1;
-      break;
-    case 0:
-      setInOut(cmd, reDirOut, reDirIn);
-      break;
-    default:
-      wait(&status);
-      return status;
+  if(spawnpid == -1) {
+    perror("Hull Breach!");
+    return -1;
+
+  } else if (spawnpid == 0) {
+    int reDirOut = searchPipe(0, cmd);
+    int reDirIn = searchPipe(1, cmd);
+    setInOut(cmd, reDirOut, reDirIn);
+
+  } else {
+    wait(&status);
+    return status;
   }
 }
 

@@ -1,5 +1,5 @@
 /* Small Shell - Program 3 - By Jack Woods (woodjack@oregonstate.edu) */
-#define BUF_SIZE 2048
+#define BUF_SIZE 2049
 
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
 
 
 /* Linear search for space character */
@@ -24,7 +26,7 @@ int findSpace(char* str, int pos) {
 /* Create an arguments array from a string */
 void buildArgv(char** current, char* str) {
     /* Parse command args */
-  int max = strlen(str) - 1;
+  int max = strlen(str);
 
   int arg = 0;
   int prevPos = 0;
@@ -47,12 +49,13 @@ void buildArgv(char** current, char* str) {
 int commandLen(char* cmd) {
 
   /* Get command length */
-  int cSize = findSpace(cmd, 0) != -1 ? cSize : strlen(cmd);
+  int cSize = findSpace(cmd, 0) != -1 ? findSpace(cmd, 0) : strlen(cmd);
   /* Count the number of arguments */
   int n = 0;
   int i = 0;
-  for (i = 0; i < strlen(cmd); i++) {
+  for (i = 0; i < cSize; i++) {
     if ((int)cmd[i] == 32) {
+      printf("%d", i);
       n++;
     }
   }
@@ -61,23 +64,72 @@ int commandLen(char* cmd) {
   return n;
 }
 
-void executeCommand(char* cmd) {
-  /* Build char* const* array for command */
-  int n = commandLen(cmd);
+int searchPipe(int c, char* cmd) {
+  /* SearchPipe can be used to find either pipe */
+  /* I could have made a struct with both boolean "pipe found" variables in
+     it, but I found this easier to implement */
+  char pipe = c == 0 ? '>' : '<';
+  int i = 0;
+  while (i < strlen(cmd) - 1) {
+    if (cmd[i] == pipe) return i;
+    i++;
+  }
+  return -1;
+}
 
-  char* argv[n];
-  buildArgv(argv, cmd); /* Manipulates argv */
-  argv[n-1] = NULL; /* Last arg is always 0 */
+void setInOut(char* cmd, int reDirOut, int reDirIn) {
+  int endCmd = INT_MAX;
+  char* name;
+  int targetFD1;
+  int targetFD2;
 
+  if (reDirIn != -1) {
+    endCmd = reDirIn;
+    reDirIn += 2;
+    /* Save the name of the new input */
+    int end = findSpace(cmd, reDirOut) != -1 ? findSpace(cmd, reDirOut) : strlen(cmd) - 1;
+    name = (char*) malloc((end - reDirIn) * sizeof(char));
+    memcpy(name, &cmd[reDirIn], (end - reDirIn));
+
+    /* Create FD and re-assign input */
+    targetFD1 = open(name, O_RDONLY);
+    dup2(targetFD1, 0);
+  }
+
+  if (reDirOut != -1) {
+    endCmd = reDirOut < endCmd ? reDirOut : endCmd;
+    reDirOut += 2;
+    /* Save the name of the new output */
+    int end = findSpace(cmd, reDirOut) != -1 ? findSpace(cmd, reDirOut) : strlen(cmd) - 1;
+    char* name = (char*) malloc((end - reDirOut) * sizeof(char));
+    memcpy(name, &cmd[reDirOut], (end - reDirOut));
+
+    /* Create FD and re-assign input */
+    targetFD2 = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    dup2(targetFD2, 1);
+  }
+  endCmd = endCmd < INT_MAX ? endCmd - 1 : strlen(cmd) - 1;
+  char* command = (char*) malloc(endCmd * sizeof(char));
+  memcpy(command, cmd, endCmd);
 
   /* Execute command */
-  printf("a%sa", argv[0]);
+  /* Build char* const* array for command */
+  int n = commandLen(command);
+  char* argv[n];
+  buildArgv(argv, command); /* Manipulates argv */
+  argv[n-1] = NULL; /* Last arg is always 0 */
+
+  /* Execute command */
   if (execvp(argv[0], argv) == -1) {
      printf("Error! %s\n", strerror(errno));
+     exit(1);
   }
 }
 
 int mngProc(char* cmd) {
+  fflush(stdout);
+  int reDirOut = searchPipe(0, cmd);
+  int reDirIn = searchPipe(1, cmd);
   pid_t spawnpid = fork();
   int status = 0;
   switch (spawnpid) {
@@ -86,7 +138,7 @@ int mngProc(char* cmd) {
       return -1;
       break;
     case 0:
-      executeCommand(cmd);
+      setInOut(cmd, reDirOut, reDirIn);
       break;
     default:
       wait(&status);

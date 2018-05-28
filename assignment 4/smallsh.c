@@ -12,11 +12,29 @@
 #include <limits.h>
 #include <signal.h>
 
-void sigintHandler(int sigNum)
+int foregroundOnly = 0;
+
+void sigHandler(int sigNum)
 {
-    signal(SIGINT, sigintHandler);
-    printf("terminated by signal %d\n", sigNum);
-    fflush(stdout);
+  switch(sigNum) {
+    case 2:
+      signal(SIGINT, sigHandler);
+      printf("terminated by signal %d\n", sigNum);
+      fflush(stdout);
+      break;
+    case 20:
+      signal(SIGTSTP, sigHandler);
+      if (foregroundOnly) {
+        printf("Exiting foreground-only mode\n");
+        foregroundOnly = 0;
+      } else {
+        printf("Entering foreground-only mode (& is now ignored)\n");
+        foregroundOnly = 1;
+      }
+      fflush(stdout);
+      break;
+  }
+
 }
 
 /* Linear search for space character */
@@ -161,7 +179,8 @@ void nullOutput() {
 }
 
 int main() {
-  signal(SIGINT, sigintHandler);
+  signal(SIGINT, sigHandler);
+  signal(SIGTSTP, sigHandler);
 
   /* Create command buffer */
   char* cmd;
@@ -213,7 +232,7 @@ int main() {
       /* Call another process and manage it */
       int bg = 0;
       if(cmd[strlen(cmd) - 2] == '&') {
-        bg = 1;
+        if (!foregroundOnly) bg = 1;
         cmd[strlen(cmd) - 2] = '\0';
       }
       child = fork();

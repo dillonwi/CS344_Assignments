@@ -149,6 +149,7 @@ int mngProc(char* cmd) {
     setInOut(cmd, reDirOut, reDirIn);
 
   } else {
+    int status;
     wait(&status);
     return status;
   }
@@ -163,7 +164,7 @@ int parseCommand(char* cmd, int status) {
   /* Check for built-in commands */
   if (strcmp(cmd, "exit\n") == 0) return -1;
   else if (strcmp(cmd, "status\n") == 0) {
-    printf("%d\n", status);
+    printf("exit value %d\n", status);
   }
   else if(strncmp(cmd, "cd", 2) == 0) {
     char token = '\n';
@@ -172,6 +173,7 @@ int parseCommand(char* cmd, int status) {
     else {
       if (chdir(&cmd[3]) == -1) {
         printf("Error! %s\n", strerror(errno));
+        return -1;
       }
     }
 
@@ -201,10 +203,10 @@ int main() {
     int bytesRead = getline(&cmdBuffer, &bufSize, stdin);
 
     /* Parse command */
-    int parseResult = parseCommand(cmdBuffer, status);
-    if (parseResult < 0) {
+    status = parseCommand(cmdBuffer, status);
+    if (status < 0) {
       printf("Exiting...\n");
-      return parseResult;
+      return status;
     }
   }
 

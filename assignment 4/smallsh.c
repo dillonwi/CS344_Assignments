@@ -10,7 +10,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 
+void sigintHandler(int sigNum)
+{
+    signal(SIGINT, sigintHandler);
+    printf("terminated by signal %d\n", sigNum);
+    fflush(stdout);
+}
 
 /* Linear search for space character */
 int findSpace(char* str, int pos) {
@@ -154,6 +161,8 @@ void nullOutput() {
 }
 
 int main() {
+  signal(SIGINT, sigintHandler);
+
   /* Create command buffer */
   char* cmd;
   size_t bufSize = BUF_SIZE;
@@ -172,6 +181,7 @@ int main() {
     waitpid(-1, &childStatus, 0);
     if (childStatus != -5 && WIFEXITED(childStatus)) {
       printf("background pid %d is done: exit value %d\n", child, WEXITSTATUS(childStatus));
+      childStatus = -5;
     }
 
     /* Prompt user for input */

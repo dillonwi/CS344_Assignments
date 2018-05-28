@@ -49,13 +49,11 @@ void buildArgv(char** current, char* str) {
 int commandLen(char* cmd) {
 
   /* Get command length */
-  int cSize = findSpace(cmd, 0) != -1 ? findSpace(cmd, 0) : strlen(cmd);
   /* Count the number of arguments */
   int n = 0;
   int i = 0;
-  for (i = 0; i < cSize; i++) {
+  for (i = 0; i < strlen(cmd); i++) {
     if ((int)cmd[i] == 32) {
-      printf("%d", i);
       n++;
     }
   }
@@ -118,6 +116,8 @@ void setInOut(char* cmd, int reDirOut, int reDirIn) {
   char* argv[n];
   buildArgv(argv, command); /* Manipulates argv */
   argv[n-1] = NULL; /* Last arg is always 0 */
+
+  printf("%d", n);
 
   /* Execute command */
   if (execvp(argv[0], argv) == -1) {

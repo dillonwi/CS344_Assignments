@@ -46,21 +46,41 @@
  		error("ERROR on binding");
  	listen(listenSocketFD, 5); // Flip the socket on - it can now receive up to 5 connections
 
- 	// Accept a connection, blocking if one is not available until one connects
- 	sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
- 	establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
- 	if (establishedConnectionFD < 0) error("ERROR on accept");
+  // Always listen for new connections
+  while(1) {
 
- 	// Get the message from the client and display it
- 	memset(buffer, '\0', 256);
- 	charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
- 	if (charsRead < 0) error("ERROR reading from socket");
- 	printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+    // Accept a connection, blocking if one is not available until one connects
+    sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
+    establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
+    if (establishedConnectionFD < 0) error("ERROR on accept");
 
- 	// Send a Success message back to the client
- 	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
- 	if (charsRead < 0) error("ERROR writing to socket");
- 	close(establishedConnectionFD); // Close the existing socket which is connected to the client
+    // Fork process to decrypt message
+    pid_t child = fork();
+    if(child == -1) {
+      perror("Hull Breach!");
+      status = -1;
+
+    } else if (child == 0) {
+
+      // Child must decrypt message and close the existing socket.
+      // Get the message from the client and display it
+      memset(buffer, '\0', 256);
+      charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
+      if (charsRead < 0) error("ERROR reading from socket");
+      printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+
+      // Send a Success message back to the client
+      charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+      if (charsRead < 0) error("ERROR writing to socket");
+      close(establishedConnectionFD); // Close the existing socket which is connected to the client
+
+    }
+
+    // Parent continues to do adult things, like listening and
+    // designating tasks.
+
+  }
+
  	close(listenSocketFD); // Close the listening socket
  	return 0;
  }

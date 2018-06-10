@@ -40,7 +40,8 @@
      int c = (int) cipher[i];
 
      // Decrypt cipher
-     c -= key[i];
+     c = c != 32 ? c : 91;
+     c -= key[i] ;
      c = c % 27;
 
      // Convert back to ascii

@@ -23,13 +23,21 @@
 
  // encrypts a cipher using the key
  void encryptCipher(char* cipher, char* key, int length) {
-   // Open keyfile
    int i;
    for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
+     int k = (int) key[i];
+     printf("%d ", c);
+     printf("%d ", k);
+
      // encrypt cipher
-     c = c != 32 ? c : 91;
-     c -= key[i] ;
+     c = c != 32 ? (c - 65) : 26;
+     k = k != 32 ? (k - 65) : 26;
+
+      printf("%d ", c);
+      printf("%d ", k);
+     c += k;
+
      c = c % 27;
 
      // Convert back to ascii
@@ -40,6 +48,8 @@
 
      // Save the character
      cipher[i] = (char) c;
+
+      printf(" %d\n", c);
 
    }
 
@@ -126,6 +136,7 @@
 
         if (charsRead < 0) error("ERROR writing to socket");
         close(establishedConnectionFD); // Close the existing socket which is connected to the client
+        return 0;
 
       } else {
         // Unsuccessful verification

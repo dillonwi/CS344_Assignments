@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	memset(key, '\0', length);
 	fgets(key, length, fp);
 
-	// Close cipher file
+	// Close key file
 	fclose(fp);
 
 	char buffer[length];

@@ -18,19 +18,29 @@
  #include <sys/types.h>
  #include <sys/socket.h>
  #include <netinet/in.h>
+ #include <math.h>
 
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
  // decrypts a cipher using the key
  void decryptCipher(char* cipher, char* key, int length) {
-   // Open keyfile
    int i;
    for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
-     // decrypt cipher
-     c = c != 32 ? c : 91;
-     c -= key[i] ;
-     c = c % 27;
+     int k = (int) key[i];
+     printf("%d ", c);
+     printf("%d ", k);
+
+     // encrypt cipher
+     c = c != 32 ? (c - 65) : 26;
+     k = k != 32 ? (k - 65) : 26;
+
+     printf("%d ", c);
+     printf("%d ", k);
+
+     c -= k;
+
+     c = (27 + c) % 27;
 
      // Convert back to ascii
      c += 65;
@@ -38,6 +48,7 @@
      // If r equals 91, convert it to a spacebar character (32)
      c = c == 91 ? 32 : c;
 
+    printf(" %d\n", c);
      // Save the character
      cipher[i] = (char) c;
 
@@ -126,6 +137,7 @@
 
         if (charsRead < 0) error("ERROR writing to socket");
         close(establishedConnectionFD); // Close the existing socket which is connected to the client
+        return 0;
 
       } else {
         // Unsuccessful verification

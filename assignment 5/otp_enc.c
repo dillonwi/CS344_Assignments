@@ -58,6 +58,14 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', length);
 	sprintf(buffer, "verifye%d", length);
 
+	int i;
+	for (i = 0; i < strlen(plaintext); i++) {
+		if (plaintext[i] != 32 && (plaintext[i] < 65 || plaintext[i] > 90)) {
+			perror("ERROR: Incompatible plaintext character");
+			return 1;
+		}
+	}
+
 	if (strlen(key) != strlen(plaintext)) {
 		perror("ERROR: Keyfile has incompatible length");
 		return 1;

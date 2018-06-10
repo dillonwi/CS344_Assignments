@@ -63,11 +63,17 @@
     } else if (child == 0) {
 
       // Child must decrypt message and close the existing socket.
-      // Get the message from the client and display it
+      // Get the verification from the client and parse it for information
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
+
+      //TODO: Get the length of the incomming message by reading the length of
+      // the keyfile. Message and keyfile must be the same length!
+
       printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+
+      decryptCipher(buffer);
 
       // Send a Success message back to the client
       charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back

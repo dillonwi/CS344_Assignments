@@ -28,15 +28,10 @@
    for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
      int k = (int) key[i];
-     printf("%d ", c);
-     printf("%d ", k);
 
      // encrypt cipher
      c = c != 32 ? (c - 65) : 26;
      k = k != 32 ? (k - 65) : 26;
-
-     printf("%d ", c);
-     printf("%d ", k);
 
      c -= k;
 
@@ -47,8 +42,7 @@
 
      // If r equals 91, convert it to a spacebar character (32)
      c = c == 91 ? 32 : c;
-
-    printf(" %d\n", c);
+     
      // Save the character
      cipher[i] = (char) c;
 

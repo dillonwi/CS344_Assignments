@@ -27,15 +27,10 @@
    for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
      int k = (int) key[i];
-     printf("%d ", c);
-     printf("%d ", k);
 
      // encrypt cipher
      c = c != 32 ? (c - 65) : 26;
      k = k != 32 ? (k - 65) : 26;
-
-      printf("%d ", c);
-      printf("%d ", k);
      c += k;
 
      c = c % 27;
@@ -48,8 +43,6 @@
 
      // Save the character
      cipher[i] = (char) c;
-
-      printf(" %d\n", c);
 
    }
 

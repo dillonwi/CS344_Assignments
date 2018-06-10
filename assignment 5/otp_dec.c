@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', length);
 	sprintf(buffer, "verifyd%d", length);
 
-	if (sizeof(key) != sizeof(cipher)) {
+	if (strlen(key) != strlen(plaintext)) {
 		perror("ERROR: Keyfile has incompatible length");
 		return 1;
 	}

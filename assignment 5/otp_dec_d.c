@@ -42,7 +42,7 @@
 
      // If r equals 91, convert it to a spacebar character (32)
      c = c == 91 ? 32 : c;
-     
+
      // Save the character
      cipher[i] = (char) c;
 
@@ -96,7 +96,6 @@
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
       if (strncmp(buffer, "verifye", 7) == 0) {
-        printf("Verified\n");
         // Verified, now get length
 
         // Get size of incoming message

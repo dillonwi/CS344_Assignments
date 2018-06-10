@@ -94,7 +94,6 @@
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
       if (strncmp(buffer, "verifye", 7) == 0) {
-        printf("Verified\n");
         // Verified, now get length
 
         // Get size of incoming message

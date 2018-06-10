@@ -66,6 +66,11 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', length);
 	sprintf(buffer, "verifye%d", length);
 
+	if (sizeof(key) != sizeof(plaintext)) {
+		perror("ERROR: Keyfile has incompatible length");
+		return 1;
+	}
+
 	// Send verification to server
 	charsWritten = send(socketFD, buffer, strlen(buffer), 0); // Write to the server
 	if (charsWritten < 0) error("CLIENT: ERROR writing to socket");

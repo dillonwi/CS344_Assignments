@@ -22,8 +22,38 @@
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
  // Decrypts a cipher using the key
- void decryptCipher(char* cipher, char* keyLoc) {
-   printf("%s\n", cipher);
+ void decryptCipher(char* cipher, char* keyLoc, int length) {
+
+   // Open keyfile
+   FILE* fp = fopen(keyLoc, "r");
+
+   // Read key from file
+   char key[length];
+   memset(cipher, '\0', length);
+   fgets(key, length, fp);
+
+   // Close keyfile
+   fclose(fp);
+
+   int i;
+   for (i = 0; i < strlen(cipher); i++) {
+     int c = (int) cipher[i];
+
+     // Decrypt cipher
+     c -= key[i];
+     c = c % 27;
+
+     // Convert back to ascii
+     c += 65;
+
+     // If r equals 91, convert it to a spacebar character (32)
+     c = c == 91 ? 32 : c;
+
+     // Save the character
+     cipher[i] = (char) c;
+
+   }
+
  }
 
  int main(int argc, char *argv[])
@@ -88,7 +118,7 @@
         charsRead = recv(establishedConnectionFD, cipher, 255, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
-        decryptCipher(cipher, argv[2]);
+        decryptCipher(cipher, argv[2], length);
 
         // Send a decrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back

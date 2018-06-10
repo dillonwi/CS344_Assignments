@@ -26,14 +26,6 @@ int main(int argc, char *argv[])
 	if (serverHostInfo == NULL) { fprintf(stderr, "CLIENT: ERROR, no such host\n"); exit(0); }
 	memcpy((char*)&serverAddress.sin_addr.s_addr, (char*)serverHostInfo->h_addr, serverHostInfo->h_length); // Copy in the address
 
-	// Set up the socket
-	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
-	if (socketFD < 0) error("CLIENT: ERROR opening socket");
-
-	// Connect to server
-	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
-		error("CLIENT: ERROR connecting");
-
 	// Get cipher from file
 	// Open cipher file
 	FILE* fp = fopen(argv[1], "r");
@@ -68,9 +60,17 @@ int main(int argc, char *argv[])
 
 	if (strlen(key) != strlen(cipher)) {
 		perror("ERROR: Keyfile has incompatible length");
-		printf("%d, %d", strlen(key), strlen(cipher));
 		return 1;
 	}
+
+	// Set up the socket
+	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
+	if (socketFD < 0) error("CLIENT: ERROR opening socket");
+
+	// Connect to server
+	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
+		error("CLIENT: ERROR connecting");
+
 
 	// Send verification to server
 	charsWritten = send(socketFD, buffer, strlen(buffer), 0); // Write to the server

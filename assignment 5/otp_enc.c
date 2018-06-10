@@ -26,14 +26,6 @@ int main(int argc, char *argv[])
 	if (serverHostInfo == NULL) { fprintf(stderr, "CLIENT: ERROR, no such host\n"); exit(0); }
 	memcpy((char*)&serverAddress.sin_addr.s_addr, (char*)serverHostInfo->h_addr, serverHostInfo->h_length); // Copy in the address
 
-	// Set up the socket
-	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
-	if (socketFD < 0) error("CLIENT: ERROR opening socket");
-
-	// Connect to server
-	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
-		error("CLIENT: ERROR connecting");
-
 	// Get plaintext from file
 	// Open plaintext file
 	FILE* fp = fopen(argv[1], "r");
@@ -70,6 +62,15 @@ int main(int argc, char *argv[])
 		perror("ERROR: Keyfile has incompatible length");
 		return 1;
 	}
+
+	// Set up the socket
+	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
+	if (socketFD < 0) error("CLIENT: ERROR opening socket");
+
+	// Connect to server
+	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
+		error("CLIENT: ERROR connecting");
+
 
 	// Send verification to server
 	charsWritten = send(socketFD, buffer, strlen(buffer), 0); // Write to the server

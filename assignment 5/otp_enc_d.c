@@ -128,6 +128,7 @@
           charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back
         } else {
           perror("ERROR: Keyfile has incompatible length");
+          return 1;
         }
 
 

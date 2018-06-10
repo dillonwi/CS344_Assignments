@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 	sprintf(buffer, "verifye%d", length);
 
 	if (strlen(key) != strlen(plaintext)) {
+		printf("%d, %d", strlen(key), strlen(plaintext));
 		perror("ERROR: Keyfile has incompatible length");
 		return 1;
 	}

@@ -80,7 +80,10 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', sizeof(buffer)); // Clear out the buffer again for reuse
 	charsRead = recv(socketFD, buffer, 39, 0); // Read data from the socket, leaving \0 at end
 	if (charsRead < 0) error("CLIENT: ERROR reading from socket");
-
+	if (strncmp(buffer, "FAIL", 4) == 0) {
+		return 1;
+	}
+	
 	// Send plaintext to server
 	charsWritten = send(socketFD, plaintext, length, 0); // Write to the server
 	if (charsWritten < 0) error("CLIENT: ERROR writing to socket");

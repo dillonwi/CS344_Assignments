@@ -129,7 +129,7 @@
           // Send an encrypted message back to the client
           charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back
         } else {
-          error("ERROR: Keyfile has incompatible length");
+          perror("ERROR: Keyfile has incompatible length");
         }
 
         // Send an decrypted message back to the client
@@ -141,7 +141,7 @@
 
       } else {
         // Unsuccessful verification
-        error("ERROR: otp_enc cannot use otp_dec_d");
+        perror("ERROR: otp_enc cannot use otp_dec_d");
         close(establishedConnectionFD); // Close the existing socket which is connected to the client
         return(1);
       }

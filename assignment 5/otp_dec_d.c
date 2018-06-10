@@ -95,7 +95,7 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
-      if (strncmp(buffer, "verifye", 7) == 0) {
+      if (strncmp(buffer, "verifyd", 7) == 0) {
         // Verified, now get length
 
         // Get size of incoming message
@@ -141,7 +141,7 @@
 
       } else {
         // Unsuccessful verification
-        printf("Received and refused: %s\n", buffer);
+        error("ERROR: otp_enc cannot use otp_dec_d");
         close(establishedConnectionFD); // Close the existing socket which is connected to the client
         return(1);
       }

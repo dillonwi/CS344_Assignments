@@ -137,7 +137,7 @@
 
       } else {
         // Unsuccessful verification
-        printf("Received and refused: %s\n", buffer);
+        error("ERROR: otp_dec cannot use otp_enc_d");
         close(establishedConnectionFD); // Close the existing socket which is connected to the client
         return(1);
       }

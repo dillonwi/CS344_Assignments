@@ -22,26 +22,15 @@
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
  // Decrypts a cipher using the key
- void decryptCipher(char* cipher, char* keyLoc, int length) {
-
-   // Open keyfile
-   FILE* fp = fopen(keyLoc, "r");
-
-   // Read key from file
-   char key[length];
-   memset(cipher, '\0', length);
-   fgets(key, length, fp);
-
-   // Close keyfile
-   fclose(fp);
+ void decryptCipher(char* cipher, char* key, int length) {
 
    int i;
-   for (i = 0; i < strlen(cipher); i++) {
+   for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
 
      // Decrypt cipher
      c = c != 32 ? c : 91;
-     c -= key[i] ;
+     c -= key[i];
      c = c % 27;
 
      // Convert back to ascii
@@ -64,7 +53,7 @@
  	char buffer[256];
  	struct sockaddr_in serverAddress, clientAddress;
 
- 	if (argc < 3) { fprintf(stderr,"USAGE: %s port key\n", argv[0]); exit(1); } // Check usage & args
+ 	if (argc < 2) { fprintf(stderr,"USAGE: %s port\n", argv[0]); exit(1); } // Check usage & args
 
  	// Set up the address struct for this process (the server)
  	memset((char *)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -102,7 +91,7 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
-      if (strncmp(buffer, "verify", 6) == 0) {
+      if (strncmp(buffer, "verifyd", 6) == 0) {
         // Verified, now get length
 
         // Get size of incoming message
@@ -112,14 +101,25 @@
         charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
         if (charsRead < 0) error("ERROR writing to socket");
 
-        // Prepare buffer
+        // Prepare buffers
         char cipher[length];
+        char key[length];
         memset(cipher, '\0', length);
+        memset(key, '\0', length);
 
-        charsRead = recv(establishedConnectionFD, cipher, 255, 0); // Read the client's message from the socket
+        // Recieve cipher
+        charsRead = recv(establishedConnectionFD, cipher, length, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
-        decryptCipher(cipher, argv[2], length);
+        // Send a Success message back to the client
+        charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+        if (charsRead < 0) error("ERROR writing to socket");
+
+        // Recieve key
+        charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
+        if (charsRead < 0) error("ERROR reading from socket");
+
+        decryptCipher(cipher, key, length);
 
         // Send a decrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back

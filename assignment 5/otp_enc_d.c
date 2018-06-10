@@ -102,7 +102,7 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
-      if (strncmp(buffer, "verify", 6) == 0) {
+      if (strncmp(buffer, "verifye", 6) == 0) {
         // Verified, now get length
 
         // Get size of incoming message
@@ -112,14 +112,25 @@
         charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
         if (charsRead < 0) error("ERROR writing to socket");
 
-        // Prepare buffer
+        // Prepare buffers
         char cipher[length];
+        char key[length];
         memset(cipher, '\0', length);
+        memset(key, '\0', length);
 
-        charsRead = recv(establishedConnectionFD, cipher, 255, 0); // Read the client's message from the socket
+        // Recieve plaintext
+        charsRead = recv(establishedConnectionFD, cipher, length, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
-        encryptCipher(cipher, argv[2], length);
+        // Send a Success message back to the client
+        charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+        if (charsRead < 0) error("ERROR writing to socket");
+
+        // Recieve key
+        charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
+        if (charsRead < 0) error("ERROR reading from socket");
+
+        decryptCipher(cipher, key, length);
 
         // Send an encrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back

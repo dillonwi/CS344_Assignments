@@ -58,8 +58,7 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', length);
 	sprintf(buffer, "verifye%d", length);
 
-	if (strlen(key) != strlen(plaintext)) {
-		printf("%d, %d", strlen(key), strlen(plaintext));
+	if (sizeof(key) != sizeof(plaintext)) {
 		perror("ERROR: Keyfile has incompatible length");
 		return 1;
 	}

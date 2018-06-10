@@ -123,7 +123,14 @@
         charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
-        decryptCipher(cipher, key, length);
+        if (sizeof(key) != sizeof(cipher)) {
+          decryptCipher(cipher, key, length);
+
+          // Send an encrypted message back to the client
+          charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back
+        } else {
+          error("ERROR: Keyfile has incompatible length");
+        }
 
         // Send an decrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back

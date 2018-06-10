@@ -21,6 +21,11 @@
 
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
+ // Decrypts a cipher using the key
+ void decryptCipher(char* cipher, char* keyLoc) {
+   printf("%s\n", cipher);
+ }
+
  int main(int argc, char *argv[])
  {
  	int listenSocketFD, establishedConnectionFD, portNumber, charsRead;
@@ -28,7 +33,7 @@
  	char buffer[256];
  	struct sockaddr_in serverAddress, clientAddress;
 
- 	if (argc < 2) { fprintf(stderr,"USAGE: %s port\n", argv[0]); exit(1); } // Check usage & args
+ 	if (argc < 3) { fprintf(stderr,"USAGE: %s port key\n", argv[0]); exit(1); } // Check usage & args
 
  	// Set up the address struct for this process (the server)
  	memset((char *)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -58,7 +63,6 @@
     pid_t child = fork();
     if(child == -1) {
       perror("Hull Breach!");
-      status = -1;
 
     } else if (child == 0) {
 
@@ -67,19 +71,37 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
+      if (strncmp(buffer, "verify", 6) == 0) {
+        // Verified, now get length
 
-      //TODO: Get the length of the incomming message by reading the length of
-      // the keyfile. Message and keyfile must be the same length!
+        // Get size of incoming message
+        int length = atoi(&buffer[6]);
 
-      printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+        // Send a Success message back to the client
+        charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+        if (charsRead < 0) error("ERROR writing to socket");
 
-      decryptCipher(buffer);
+        // Prepare buffer
+        char cipher[length];
+        memset(cipher, '\0', length);
 
-      // Send a Success message back to the client
-      charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
-      if (charsRead < 0) error("ERROR writing to socket");
-      close(establishedConnectionFD); // Close the existing socket which is connected to the client
+        charsRead = recv(establishedConnectionFD, cipher, 255, 0); // Read the client's message from the socket
+        if (charsRead < 0) error("ERROR reading from socket");
 
+        decryptCipher(cipher, argv[2]);
+
+        // Send a decrypted message back to the client
+        charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back
+
+        if (charsRead < 0) error("ERROR writing to socket");
+        close(establishedConnectionFD); // Close the existing socket which is connected to the client
+
+      } else {
+        // Unsuccessful verification
+        printf("Received and refused: %s\n", buffer);
+        close(establishedConnectionFD); // Close the existing socket which is connected to the client
+        return(1);
+      }
     }
 
     // Parent continues to do adult things, like listening and

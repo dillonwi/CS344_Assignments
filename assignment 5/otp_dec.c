@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 
 	if (strlen(key) != strlen(cipher)) {
 		perror("ERROR: Keyfile has incompatible length");
+		printf("%d, %d", strlen(key), strlen(cipher));
 		return 1;
 	}
 

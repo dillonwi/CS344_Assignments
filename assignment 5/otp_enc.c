@@ -45,14 +45,14 @@ int main(int argc, char *argv[])
 
 	char plaintext[length];
 	memset(plaintext, '\0', length);
-	fgets(key, length, fp);
+	fgets(plaintext, length, fp);
 
 	// Close plaintext file
 	fclose(fp);
 
 	// Get key from file
 	// Open key file
-	FILE* fp = fopen(argv[2], "r");
+	fp = fopen(argv[2], "r");
 
 	// Read key from file
 	char key[length];
@@ -66,7 +66,6 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', length);
 	sprintf(buffer, "verifye%d", length);
 
-
 	// Send verification to server
 	charsWritten = send(socketFD, buffer, strlen(buffer), 0); // Write to the server
 	if (charsWritten < 0) error("CLIENT: ERROR writing to socket");
@@ -74,7 +73,7 @@ int main(int argc, char *argv[])
 
 	// Get return message from server
 	memset(buffer, '\0', sizeof(buffer)); // Clear out the buffer again for reuse
-	charsRead = recv(socketFD, buffer, sizeof(buffer) - 1, 0); // Read data from the socket, leaving \0 at end
+	charsRead = recv(socketFD, buffer, 39, 0); // Read data from the socket, leaving \0 at end
 	if (charsRead < 0) error("CLIENT: ERROR reading from socket");
 
 	// Send plaintext to server
@@ -84,7 +83,7 @@ int main(int argc, char *argv[])
 
 	// Get return message from server
 	memset(buffer, '\0', sizeof(buffer)); // Clear out the buffer again for reuse
-	charsRead = recv(socketFD, buffer, sizeof(buffer) - 1, 0); // Read data from the socket, leaving \0 at end
+	charsRead = recv(socketFD, buffer, 39, 0); // Read data from the socket, leaving \0 at end
 	if (charsRead < 0) error("CLIENT: ERROR reading from socket");
 
 	// Send key to server

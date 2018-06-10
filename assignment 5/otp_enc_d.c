@@ -22,23 +22,11 @@
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
  // encrypts a cipher using the key
- void encryptCipher(char* cipher, char* keyLoc, int length) {
-
+ void encryptCipher(char* cipher, char* key, int length) {
    // Open keyfile
-   FILE* fp = fopen(keyLoc, "r");
-
-   // Read key from file
-   char key[length];
-   memset(cipher, '\0', length);
-   fgets(key, length, fp);
-
-   // Close keyfile
-   fclose(fp);
-
    int i;
-   for (i = 0; i < strlen(cipher); i++) {
+   for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
-
      // encrypt cipher
      c = c != 32 ? c : 91;
      c -= key[i] ;
@@ -64,7 +52,7 @@
  	char buffer[256];
  	struct sockaddr_in serverAddress, clientAddress;
 
- 	if (argc < 3) { fprintf(stderr,"USAGE: %s port key\n", argv[0]); exit(1); } // Check usage & args
+ 	if (argc < 2) { fprintf(stderr,"USAGE: %s port\n", argv[0]); exit(1); } // Check usage & args
 
  	// Set up the address struct for this process (the server)
  	memset((char *)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -102,11 +90,12 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
-      if (strncmp(buffer, "verifye", 6) == 0) {
+      if (strncmp(buffer, "verifye", 7) == 0) {
+        printf("Verified\n");
         // Verified, now get length
 
         // Get size of incoming message
-        int length = atoi(&buffer[6]);
+        int length = atoi(&buffer[7]);
 
         // Send a Success message back to the client
         charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
@@ -130,7 +119,7 @@
         charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
-        decryptCipher(cipher, key, length);
+        encryptCipher(cipher, key, length);
 
         // Send an encrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back

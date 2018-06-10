@@ -21,16 +21,15 @@
 
  void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
 
- // Decrypts a cipher using the key
+ // decrypts a cipher using the key
  void decryptCipher(char* cipher, char* key, int length) {
-
+   // Open keyfile
    int i;
    for (i = 0; i < length; i++) {
      int c = (int) cipher[i];
-
-     // Decrypt cipher
+     // decrypt cipher
      c = c != 32 ? c : 91;
-     c -= key[i];
+     c -= key[i] ;
      c = c % 27;
 
      // Convert back to ascii
@@ -91,11 +90,12 @@
       memset(buffer, '\0', 256);
       charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
       if (charsRead < 0) error("ERROR reading from socket");
-      if (strncmp(buffer, "verifyd", 6) == 0) {
+      if (strncmp(buffer, "verifye", 7) == 0) {
+        printf("Verified\n");
         // Verified, now get length
 
         // Get size of incoming message
-        int length = atoi(&buffer[6]);
+        int length = atoi(&buffer[7]);
 
         // Send a Success message back to the client
         charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
@@ -107,7 +107,7 @@
         memset(cipher, '\0', length);
         memset(key, '\0', length);
 
-        // Recieve cipher
+        // Recieve plaintext
         charsRead = recv(establishedConnectionFD, cipher, length, 0); // Read the client's message from the socket
         if (charsRead < 0) error("ERROR reading from socket");
 
@@ -121,7 +121,7 @@
 
         decryptCipher(cipher, key, length);
 
-        // Send a decrypted message back to the client
+        // Send an decrypted message back to the client
         charsRead = send(establishedConnectionFD, cipher, length, 0); // Send success back
 
         if (charsRead < 0) error("ERROR writing to socket");

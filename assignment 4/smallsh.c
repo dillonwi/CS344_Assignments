@@ -100,7 +100,19 @@ int searchPipe(int c, char* cmd) {
   return -1;
 }
 
+int findMoney(char* cmd) {
+  int i = 0;
+  while (i < strlen(cmd)) {
+    if (cmd[i] == '$' && cmd[i + 1] == '$')
+      return i;
+    i++;
+  }
+  return -1;
+}
+
 void setInOut(char* cmd, int reDirOut, int reDirIn) {
+
+
   int endCmd = INT_MAX;
 
   if (reDirIn != -1) {
@@ -202,19 +214,30 @@ int main() {
       printf("background pid %d is done: exit value %d\n", child, WEXITSTATUS(childStatus));
       childStatus = -5;
     }
+    if (childStatus != -5 && WIFSIGNALED(childStatus)) {
+      printf("background pid %d is done: terminated by signal %d", child, WTERMSIG(childStatus));
+      childStatus = -5;
+    }
 
     /* Prompt user for input */
     printf(": ");
     int bytesRead = getline(&cmd, &bufSize, stdin);
-
-    /* Parse command */
     fflush(stdout);
 
+    /* Parse command */
+     int moneyLoc = findMoney(cmd);
+     if (moneyLoc != -1) {
+       char buff[moneyLoc];
+       buff[moneyLoc] = '\0';
+       memcpy(&buff, cmd, moneyLoc);
+       sprintf(cmd, "%s%d\n", &buff, (int) getpid());
+     }
+
     /* Check for comment first */
-    if (cmd[0] == '#' || strlen(cmd) == 1) return 0;
+    if (cmd[0] == '#' || strlen(cmd) == 1) status = 0;
 
     /* Check for built-in commands */
-    if (strcmp(cmd, "exit\n") == 0) return 0;
+    if (strncmp(cmd, "exit", 4) == 0) return 0;
     else if (strncmp(cmd, "status", 6) == 0) {
       printf("exit value %d\n", status / 256);
     }
@@ -241,7 +264,11 @@ int main() {
         status = -1;
 
       } else if (child == 0) {
-        if (bg) nullOutput();
+        if (bg) {
+          nullOutput();
+          signal(SIGINT, SIG_IGN);
+          signal(SIGTSTP, SIG_IGN);
+        }
         int reDirOut = searchPipe(0, cmd);
         int reDirIn = searchPipe(1, cmd);
         setInOut(cmd, reDirOut, reDirIn);
